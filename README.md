@@ -16,7 +16,7 @@ discussed in the **Background information** section below. Once all the [setup](
   Learn to move the robot around.  Movement is a good first step with mobile robotics.
   - [Lecture slides](https://drive.google.com/open?id=1rjkOZNw0mO0pH7Ovhy-7riYG3Xa4xq4rKbwMPhDppJs)
   - [Starting code (link to a specific folder in this repository)](https://github.com/Rosebotics/ev3dev-curriculum/tree/master/sandbox/src/motors)
-  - [Checkoff sheet](https://drive.google.com/open?id=14_BQghdiRCOzJ5V_edXhcmaZFhH1qzkzL2u50uH6_o0)
+  - [Checkoff sheet](https://drive.google.cm/open?id=14_BQghdiRCOzJ5V_edXhcmaZFhH1qzkzL2u50uH6_o0)
 
   ### Digital Inputs (and a few other things)
   Learn about the EV3 buttons, IR remote, and touch sensor (the digital inputs) plus a few other things.
