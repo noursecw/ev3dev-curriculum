@@ -53,17 +53,13 @@ class Snatch3r(object):
         assert self.left_motor.connected
         assert self.right_motor.connected
 
-        if (degrees_to_turn > 0):
-            left_sp = turn_speed_sp
-            right_sp = turn_speed_sp
-        else:
-            left_sp = -turn_speed_sp
-            right_sp = -turn_speed_sp
+        left_sp = turn_speed_sp
+        right_sp = turn_speed_sp
 
-        d = 1
+        d = 4.7
         turn_sp = d * degrees_to_turn
 
-        self.left_motor.run_to_rel_pos(position_sp=turn_sp,
+        self.left_motor.run_to_rel_pos(position_sp=-turn_sp,
                                        speed_sp=left_sp,
                                        stop_action=ev3.Motor.STOP_ACTION_BRAKE)
 

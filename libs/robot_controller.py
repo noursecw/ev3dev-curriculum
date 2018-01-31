@@ -55,10 +55,10 @@ class Snatch3r(object):
 
         if (degrees_to_turn > 0):
             left_sp = turn_speed_sp
-            right_sp = -1 * turn_speed_sp
-        else:
-            left_sp = -1 * turn_speed_sp
             right_sp = turn_speed_sp
+        else:
+            left_sp = -turn_speed_sp
+            right_sp = -turn_speed_sp
 
         d = 1
         turn_sp = d * degrees_to_turn
