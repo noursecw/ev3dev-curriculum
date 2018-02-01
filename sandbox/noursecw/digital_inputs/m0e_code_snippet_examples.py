@@ -213,3 +213,6 @@ def touchsensor_example():
     while not touch_sensor.is_pressed:
         time.sleep(0.01)
     arm_motor.stop(stop_action="brake")
+
+
+buttons_as_states()
