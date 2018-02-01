@@ -18,7 +18,7 @@ import time
 
 class Snatch3r(object):
     """Commands for the Snatch3r robot that might be useful in many different programs."""
-    
+
     # TODO: Implement the Snatch3r class as needed when working the sandox exercises
     # (and delete these comments)
     def __init__(self):
@@ -46,30 +46,25 @@ class Snatch3r(object):
 
         self.right_motor.wait_while(ev3.Motor.STATE_RUNNING)
         self.left_motor.wait_while(ev3.Motor.STATE_RUNNING)
-        # ev3.Sound.beep().wait()
+        ev3.Sound.beep().wait()
 
     def turn_degrees(self, degrees_to_turn, turn_speed_sp):
         # Check that the motors are actually connected
         assert self.left_motor.connected
         assert self.right_motor.connected
 
-        if (degrees_to_turn > 0):
-            left_sp = turn_speed_sp
-            right_sp = turn_speed_sp
-        else:
-            left_sp = -turn_speed_sp
-            right_sp = -turn_speed_sp
+        left_sp = turn_speed_sp
+        right_sp = turn_speed_sp
 
-        d = 1
+        d = 4.7
         turn_sp = d * degrees_to_turn
 
-        self.left_motor.run_to_rel_pos(position_sp=turn_sp,
+        self.left_motor.run_to_rel_pos(position_sp=-turn_sp,
                                        speed_sp=left_sp,
                                        stop_action=ev3.Motor.STOP_ACTION_BRAKE)
 
         self.right_motor.run_to_rel_pos(position_sp=turn_sp,
-                                        speed_sp=right_sp,
-                                        stop_action=ev3.Motor.STOP_ACTION_BRAKE)
+                                        speed_sp=right_sp, stop_action=ev3.Motor.STOP_ACTION_BRAKE)
 
         self.right_motor.wait_while(ev3.Motor.STATE_RUNNING)
         self.left_motor.wait_while(ev3.Motor.STATE_RUNNING)
