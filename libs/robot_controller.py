@@ -24,8 +24,12 @@ class Snatch3r(object):
     def __init__(self):
         self.left_motor = ev3.LargeMotor(ev3.OUTPUT_B)
         self.right_motor = ev3.LargeMotor(ev3.OUTPUT_C)
+        self.arm_motor = ev3.MediumMotor(ev3.OUTPUT_A)
+        self.touch_sensor = ev3.TouchSensor(ev3.INPUT_1)
         assert self.left_motor.connected
         assert self.right_motor.connected
+        assert self.arm_motor
+        assert self.touch_sensor
 
     def drive_inches(self, inches_target, speed_deg_per_second):
         # Check that the motors are actually connected
@@ -74,3 +78,52 @@ class Snatch3r(object):
         self.right_motor.wait_while(ev3.Motor.STATE_RUNNING)
         self.left_motor.wait_while(ev3.Motor.STATE_RUNNING)
         ev3.Sound.beep().wait()
+
+    def arm_calibration(self):
+        """
+        Runs the arm up until the touch sensor is hit then back to the bottom again, beeping at both locations.
+        Once back at in the bottom position, gripper open, set the absolute encoder position to 0.  You are calibrated!
+        The Snatch3r arm needs to move 14.2 revolutions to travel from the touch sensor to the open position.
+
+        Type hints:
+          :type arm_motor: ev3.MediumMotor
+          :type touch_sensor: ev3.TouchSensor
+        """
+        self.arm_motor.run_forever(speed_sp=900)
+        while not self.touch_sensor.is_pressed:
+            time.sleep(0.01)
+        self.arm_motor.stop(stop_action="brake")
+        ev3.Sound.beep()
+        arm_revolutions_for_full_range = 14.2
+        self.arm_motor.run_to_rel_pos(
+            position_sp=-arm_revolutions_for_full_range * 360)
+        self.arm_motor.wait_while(ev3.Motor.STATE_RUNNING)
+        ev3.Sound.beep()
+        self.arm_motor.position = 0  # Calibrate the down position as 0 (this line is correct as is).
+
+    def arm_up(self):
+        """
+        Moves the Snatch3r arm to the up position.
+
+        Type hints:
+          :type arm_motor: ev3.MediumMotor
+          :type touch_sensor: ev3.TouchSensor
+        """
+        self.arm_motor.run_forever(speed_sp=900)
+        while not self.touch_sensor.is_pressed:
+            time.sleep(0.01)
+        self.arm_motor.stop(stop_action="brake")
+        ev3.Sound.beep()
+
+    def arm_down(self):
+        """
+        Moves the Snatch3r arm to the down position.
+
+        Type hints:
+          :type arm_motor: ev3.MediumMotor
+        """
+        self.arm_motor.run_to_abs_pos(position_sp=0, speed_sp=900)
+        self.arm_motor.wait_while(
+            ev3.Motor.STATE_RUNNING)  # Blocks until the motor finishes
+        # running
+        ev3.Sound.beep()
