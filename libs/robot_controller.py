@@ -143,7 +143,7 @@ class Snatch3r(object):
         self.left_motor.run_forever(speed_sp=left_speed)
         self.right_motor.run_forever(speed_sp=right_speed)
 
-    def drive_backward(self, left_speed, right_speed):
+    def drive_backwards(self, left_speed, right_speed):
         self.left_motor.run_forever(speed_sp=-left_speed)
         self.right_motor.run_forever(speed_sp=-right_speed)
 
@@ -154,3 +154,8 @@ class Snatch3r(object):
     def turn_left(self, left_speed, right_speed):
         self.left_motor.run_forever(speed_sp=left_speed)
         self.right_motor.run_forever(speed_sp=-right_speed)
+
+    def stop(self):
+        self.arm_motor.stop(stop_action='brake')
+        self.left_motor.stop(stop_action='brake')
+        self.right_motor.stop(stop_action='brake')
