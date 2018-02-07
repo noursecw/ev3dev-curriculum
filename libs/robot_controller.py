@@ -12,26 +12,30 @@
 """
 
 import ev3dev.ev3 as ev3
-import math
 import time
 
 
 class Snatch3r(object):
     """Commands for the Snatch3r robot that might be useful in many different programs."""
-    
-    # TODO: Implement the Snatch3r class as needed when working the sandox exercises
+
+    # DONE: Implement the Snatch3r class as needed when working the sandox
+    # exercises
     # (and delete these comments)
     def __init__(self):
         self.left_motor = ev3.LargeMotor(ev3.OUTPUT_B)
         self.right_motor = ev3.LargeMotor(ev3.OUTPUT_C)
         self.arm_motor = ev3.MediumMotor(ev3.OUTPUT_A)
         self.touch_sensor = ev3.TouchSensor(ev3.INPUT_1)
+        self.running = False
+
         assert self.left_motor.connected
         assert self.right_motor.connected
         assert self.arm_motor
         assert self.touch_sensor
 
     def drive_inches(self, inches_target, speed_deg_per_second):
+        """Drives forward or backwards at the specified speed for the number of inches.
+         If inches_target is negative, it drives backwards. """
         # Check that the motors are actually connected
         assert self.left_motor.connected
         assert self.right_motor.connected
@@ -41,12 +45,14 @@ class Snatch3r(object):
         d = inches_target
         degrees_per_inch = 90
         motor_turns_needed_in_degrees = d * degrees_per_inch
-        self.left_motor.run_to_rel_pos(position_sp=motor_turns_needed_in_degrees,
-                                       speed_sp=left_sp,
-                                       stop_action=ev3.Motor.STOP_ACTION_BRAKE)
+        self.left_motor.run_to_rel_pos(
+            position_sp=motor_turns_needed_in_degrees,
+            speed_sp=left_sp,
+            stop_action=ev3.Motor.STOP_ACTION_BRAKE)
 
-        self.right_motor.run_to_rel_pos(position_sp=motor_turns_needed_in_degrees,
-                                        speed_sp=right_sp, stop_action=ev3.Motor.STOP_ACTION_BRAKE)
+        self.right_motor.run_to_rel_pos(
+            position_sp=motor_turns_needed_in_degrees,
+            speed_sp=right_sp, stop_action=ev3.Motor.STOP_ACTION_BRAKE)
 
         self.right_motor.wait_while(ev3.Motor.STATE_RUNNING)
         self.left_motor.wait_while(ev3.Motor.STATE_RUNNING)
@@ -57,14 +63,10 @@ class Snatch3r(object):
         assert self.left_motor.connected
         assert self.right_motor.connected
 
-        if (degrees_to_turn > 0):
-            left_sp = turn_speed_sp
-            right_sp = turn_speed_sp
-        else:
-            left_sp = -turn_speed_sp
-            right_sp = -turn_speed_sp
+        left_sp = turn_speed_sp
+        right_sp = turn_speed_sp
 
-        d = 1
+        d = 4.7
         turn_sp = d * degrees_to_turn
 
         self.left_motor.run_to_rel_pos(position_sp=turn_sp,
@@ -85,29 +87,27 @@ class Snatch3r(object):
         Once back at in the bottom position, gripper open, set the absolute encoder position to 0.  You are calibrated!
         The Snatch3r arm needs to move 14.2 revolutions to travel from the touch sensor to the open position.
 
-        Type hints:
-          :type arm_motor: ev3.MediumMotor
-          :type touch_sensor: ev3.TouchSensor
         """
         self.arm_motor.run_forever(speed_sp=900)
+
         while not self.touch_sensor.is_pressed:
             time.sleep(0.01)
         self.arm_motor.stop(stop_action="brake")
         ev3.Sound.beep()
+
         arm_revolutions_for_full_range = 14.2
         self.arm_motor.run_to_rel_pos(
             position_sp=-arm_revolutions_for_full_range * 360)
         self.arm_motor.wait_while(ev3.Motor.STATE_RUNNING)
         ev3.Sound.beep()
-        self.arm_motor.position = 0  # Calibrate the down position as 0 (this line is correct as is).
+
+        self.arm_motor.position = 0
+        # Calibrate the down position as 0 (this line is correct as is).
 
     def arm_up(self):
         """
         Moves the Snatch3r arm to the up position.
 
-        Type hints:
-          :type arm_motor: ev3.MediumMotor
-          :type touch_sensor: ev3.TouchSensor
         """
         self.arm_motor.run_forever(speed_sp=900)
         while not self.touch_sensor.is_pressed:
@@ -118,9 +118,6 @@ class Snatch3r(object):
     def arm_down(self):
         """
         Moves the Snatch3r arm to the down position.
-
-        Type hints:
-          :type arm_motor: ev3.MediumMotor
         """
         self.arm_motor.run_to_abs_pos(position_sp=0, speed_sp=900)
         self.arm_motor.wait_while(
@@ -148,12 +145,12 @@ class Snatch3r(object):
         self.right_motor.run_forever(speed_sp=-right_speed)
 
     def turn_right(self, left_speed, right_speed):
-        self.left_motor.run_forever(speed_sp=-left_speed)
-        self.right_motor.run_forever(speed_sp=right_speed)
-
-    def turn_left(self, left_speed, right_speed):
         self.left_motor.run_forever(speed_sp=left_speed)
         self.right_motor.run_forever(speed_sp=-right_speed)
+
+    def turn_left(self, left_speed, right_speed):
+        self.left_motor.run_forever(speed_sp=-left_speed)
+        self.right_motor.run_forever(speed_sp=right_speed)
 
     def stop(self):
         self.arm_motor.stop(stop_action='brake')
