@@ -13,6 +13,7 @@
 
 import ev3dev.ev3 as ev3
 import time
+import math
 
 
 class Snatch3r(object):
@@ -35,7 +36,7 @@ class Snatch3r(object):
         assert self.left_motor.connected
         assert self.right_motor.connected
         assert self.arm_motor
-        assert self.touch_sensor
+        # assert self.touch_sensor
 
     def drive_inches(self, inches_target, speed_deg_per_second):
         """Drives forward or backwards at the specified speed for the number of inches.
@@ -160,3 +161,59 @@ class Snatch3r(object):
         self.arm_motor.stop(stop_action='brake')
         self.left_motor.stop(stop_action='brake')
         self.right_motor.stop(stop_action='brake')
+
+    def seek_beacon(self):
+        """
+            Uses the IR Sensor in BeaconSeeker mode to find the beacon.  If the beacon is found this return True.
+            If the beacon is not found and the attempt is cancelled by hitting the touch sensor, return False.
+
+            Type hints:
+              :type robot: robo.Snatch3r
+              :rtype: bool
+            """
+        beacon_seeker = ev3.BeaconSeeker()  # Assumes remote is set to channel 1
+
+        forward_speed = 300
+        turn_speed = 100
+
+        while not self.touch_sensor.is_pressed:
+            # The touch sensor can be used to abort the attempt (sometimes handy during testing)
+            current_heading = beacon_seeker.heading  # use the beacon_seeker heading
+            current_distance = beacon_seeker.distance  # use the beacon_seeker distance
+            if current_distance == -128:
+                # If the IR Remote is not found just sit idle for this program until it is moved.
+                print("IR Remote not found. Distance is -128")
+                self.stop()
+            else:
+                if math.fabs(current_heading) < 2:
+                    # Close enough of a heading to move forward
+                    print("On the right heading. Distance: ", current_distance)
+                    # You add more!
+                    if abs(current_distance) <= 1:
+                        self.drive_inches(4.5, forward_speed)
+                        # self.right_motor.wait_while(ev3.Motor.STATE_RUNNING)
+                        # self.left_motor.wait_while(ev3.Motor.STATE_RUNNING)
+
+                        return True
+                    if abs(current_distance) > 1:
+                        print('forward')
+                        self.drive_forward(forward_speed, forward_speed)
+
+
+                elif abs(current_heading) > 2 and abs(current_heading) < 10:
+                    if current_heading < -0.5:
+                        print("left")
+                        self.turn_left(turn_speed, forward_speed)
+                    if current_heading > 0.5:
+                        print("right")
+                        self.turn_right(forward_speed, turn_speed)
+
+                elif abs(current_heading) >= 10:
+                    print("heading is too far off")
+
+            time.sleep(0.2)
+
+        # The touch_sensor was pressed to abort the attempt if this code runs.
+        print("Abandon ship!")
+        self.stop()
+        return False
