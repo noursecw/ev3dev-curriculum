@@ -133,33 +133,42 @@ class Snatch3r(object):
         ev3.Sound.beep()
 
     def loop_forever(self):
+        """provides a running variable to loop code until self.running is set to False"""
         self.running = True
         while self.running:
             time.sleep(0.1)
 
     def shutdown(self):
+        """Halts all motors on the EV3 Robot and setes running variable to False"""
         self.running = False
         self.arm_motor.stop(stop_action='brake')
         self.left_motor.stop(stop_action='brake')
         self.right_motor.stop(stop_action='brake')
 
     def drive_forward(self, left_speed, right_speed):
+        """Drives the robot forward with each motor moving at the specified speed.
+            Both speed parameters should be positive."""
         self.left_motor.run_forever(speed_sp=left_speed)
         self.right_motor.run_forever(speed_sp=right_speed)
 
     def drive_backwards(self, left_speed, right_speed):
+        """Drives the robot backward with each tread moving at the specified speed.
+            Both speed parameters should be positive."""
         self.left_motor.run_forever(speed_sp=-left_speed)
         self.right_motor.run_forever(speed_sp=-right_speed)
 
     def turn_right(self, left_speed, right_speed):
+        """Turns Robot in place to the right; both speed parameters should be positive"""
         self.left_motor.run_forever(speed_sp=left_speed)
         self.right_motor.run_forever(speed_sp=-right_speed)
 
     def turn_left(self, left_speed, right_speed):
+        """Turns Robot in place to the left; both speed parameters should be positive"""
         self.left_motor.run_forever(speed_sp=-left_speed)
         self.right_motor.run_forever(speed_sp=right_speed)
 
     def stop(self):
+        """Halts all motors on the robot. Does not set running variable to False."""
         self.arm_motor.stop(stop_action='brake')
         self.left_motor.stop(stop_action='brake')
         self.right_motor.stop(stop_action='brake')
@@ -169,9 +178,6 @@ class Snatch3r(object):
             Uses the IR Sensor in BeaconSeeker mode to find the beacon.  If the beacon is found this return True.
             If the beacon is not found and the attempt is cancelled by hitting the touch sensor, return False.
 
-            Type hints:
-              :type robot: robo.Snatch3r
-              :rtype: bool
             """
         beacon_seeker = ev3.BeaconSeeker()  # Assumes remote is set to channel 1
 
