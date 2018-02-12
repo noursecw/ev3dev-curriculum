@@ -10,7 +10,7 @@ import ev3dev.ev3 as ev3
 import time
 
 import robot_controller as robo
-import mqtt_remote_method_calls as com
+from mqtt_remote_method_calls import MqttClient
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
     # DONE: 2. Create an MqttClient (no delegate needed since EV3 will only
     # send data, so an empty constructor is fine)
     # Then connect to the pc using the connect_to_pc method.
-    mqtt_client = com.MqttClient()
+    mqtt_client = MqttClient()
     mqtt_client.connect_to_pc()
 
     robot = robo.Snatch3r()
@@ -44,9 +44,6 @@ def main():
         mqtt_client.send_message("on_rectangle_update", [robot.pixy.value(
             1), robot.pixy.value(2), robot.pixy.value(3), robot.pixy.value(4)])
 
-
-
-
         time.sleep(0.25)
 
     print("Goodbye!")
@@ -62,4 +59,3 @@ def main():
 # Calls  main  to start the ball rolling.
 # ----------------------------------------------------------------------
 main()
-

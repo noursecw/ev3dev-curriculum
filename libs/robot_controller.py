@@ -207,8 +207,7 @@ class Snatch3r(object):
                         print('forward')
                         self.drive_forward(forward_speed, forward_speed)
 
-
-                elif abs(current_heading) > 2 and abs(current_heading) < 10:
+                elif 2 < abs(current_heading) < 10:
                     if current_heading < -0.5:
                         print("left")
                         self.turn_left(turn_speed, forward_speed)

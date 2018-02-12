@@ -21,15 +21,18 @@ Authors: David Fisher and Tiarnan Rice.
 import tkinter
 from tkinter import ttk
 
-import mqtt_remote_method_calls as com
+from mqtt_remote_method_calls import MqttClient
 
 
 # DONE: 2. Create a class. Feel free to call it MyDelegate.
 # Within that class you don't even need an __init__ constructor (an empty constructor comes for free)
 
+def guess_resopnse(message_from_ev3):
+    print(message_from_ev3)
+
+
 class MyDelegate(object):
-    def guess_resopnse(self, message_from_ev3):
-        print(message_from_ev3)
+    pass
 
 
 # DONE: 3. Create a method named guess_response within MyDelegate.
@@ -43,7 +46,7 @@ def main():
     # connect_to_ev3
 
     my_delegate = MyDelegate()
-    mqtt_client = com.MqttClient(my_delegate)
+    mqtt_client = MqttClient(my_delegate)
     mqtt_client.connect_to_ev3()
 
     root = tkinter.Tk()

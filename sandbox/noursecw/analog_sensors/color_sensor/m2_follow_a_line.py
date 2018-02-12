@@ -27,7 +27,7 @@ def main():
     print("--------------------------------------------")
     ev3.Sound.speak("Follow a line").wait()
 
-    # TODO: 4: After running the code set the default white and black levels to a better initial guess.
+    # DONE: 4: After running the code set the default white and black levels to a better initial guess.
     #   Once you have the values hardcoded to resonable numbers here you don't really need the w and b commands below.
     white_level = 4
     black_level = 96
@@ -97,7 +97,6 @@ def follow_the_line(robot, white_level, black_level):
 
             # if robot.touch_sensor:
             # print('touch sensor - true')
-
 
     robot.stop()
     ev3.Sound.speak("Done")

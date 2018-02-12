@@ -47,7 +47,6 @@ def main():
         elif x >= 150 and x <= 170:
             robot.stop()
 
-
         time.sleep(0.25)
 
     robot.stop()

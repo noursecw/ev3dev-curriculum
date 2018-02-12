@@ -112,7 +112,7 @@ def main():
     while time_s != 0:
         left_sp = int(input("Enter a speed (0 to 900 dps): "))
         right_sp = left_sp
-       # time_s = int(input("Enter a time to drive (seconds): "))
+        # time_s = int(input("Enter a time to drive (seconds): "))
         d = int(input("Enter a distance to travel:"))
         speed_in_inches_per_second = 0.0103 * left_sp + 0.3152
         t = d / speed_in_inches_per_second
