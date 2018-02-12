@@ -95,7 +95,6 @@ def main():
               lambda event: turn_right(mqtt_client, left_speed_entry,
                                        right_speed_entry))
 
-
     back_button = ttk.Button(main_frame, text="Back")
     back_button.grid(row=4, column=1)
     # back_button and '<Down>' key
