@@ -7,6 +7,7 @@ def main():
     waypoint = Waypoint(0, 0)
 
     root = tkinter.Tk()
+    root.title('Autonomous Retrieval Robot Command Window')
     frame = ttk.Frame(root, padding=10)
     frame.grid()
 
@@ -18,7 +19,10 @@ def main():
 
     goto_button = ttk.Button(frame, text="Go To")
     goto_button.grid()
-    goto_button['command'] = lambda: goto(waypoint, speed_entry.get)
+    goto_button['command'] = lambda: goto(waypoint, speed_entry.get())
+
+    speed_label = ttk.Label(text='Speed:')
+    speed_label.grid()
 
     speed_entry = ttk.Entry(frame)
     speed_entry.insert(0, "500")
@@ -26,16 +30,16 @@ def main():
 
     return_to_base_button = ttk.Button(frame, text="Return to Base")
     return_to_base_button.grid()
-    return_to_base_button['command'] = lambda: goto(start, speed_entry.get)
+    return_to_base_button['command'] = lambda: goto(start, speed_entry.get())
 
-    waypoint_canvas = tkinter.Canvas(frame, width=200, height=150)
+    waypoint_canvas = tkinter.Canvas(frame, width=500, height=750)
     waypoint_canvas.grid()
     waypoint_canvas.bind("<Button-1>", lambda event: handle_mouse_click(
         event, waypoint))
 
     clear_waypoint_button = ttk.Button(frame, text="Clear Waypoint")
     clear_waypoint_button.grid()
-    clear_waypoint_button['command'] = waypoint_canvas.delete("all")
+    clear_waypoint_button['command'] = lambda: waypoint_canvas.delete("all")
 
     root.mainloop()
 
@@ -46,7 +50,7 @@ class Waypoint(object):
         self.y = y
 
     def __repr__(self):
-        print()
+        return 'Waypoint({: .1f}, {: .1f})'.format(self.x, self.y)
 
 
 def goto(waypoint, speed, retrieve=False):
