@@ -3,7 +3,7 @@ from tkinter import ttk
 
 
 def main():
-    start = Waypoint(0, 0)
+    start = Waypoint(200, 450)
     waypoint = Waypoint(0, 0)
 
     root = tkinter.Tk()
@@ -12,33 +12,36 @@ def main():
     frame.grid()
 
     goto_and_retrieve_button = ttk.Button(frame, text="Go To and Retrieve")
-    goto_and_retrieve_button.grid()
+    goto_and_retrieve_button.grid(row=2, column=3)
     goto_and_retrieve_button['command'] = lambda: goto(waypoint,
                                                        speed_entry.get(),
                                                        retrieve=True)
 
     goto_button = ttk.Button(frame, text="Go To")
-    goto_button.grid()
+    goto_button.grid(row=2, column=4)
     goto_button['command'] = lambda: goto(waypoint, speed_entry.get())
 
-    speed_label = ttk.Label(text='Speed:')
-    speed_label.grid()
+    speed_label = ttk.Label(frame, text='Speed:')
+    speed_label.grid(row=2, column=1)
 
-    speed_entry = ttk.Entry(frame)
+    speed_entry = ttk.Entry(frame, width=5)
     speed_entry.insert(0, "500")
-    speed_entry.grid()
+    speed_entry.grid(row=2, column=2)
 
     return_to_base_button = ttk.Button(frame, text="Return to Base")
-    return_to_base_button.grid()
+    return_to_base_button.grid(row=2, column=5)
     return_to_base_button['command'] = lambda: goto(start, speed_entry.get())
 
-    waypoint_canvas = tkinter.Canvas(frame, width=500, height=750)
-    waypoint_canvas.grid()
+    width = 400
+    height = 500
+    waypoint_canvas = tkinter.Canvas(frame, width=width, height=height)
+    waypoint_canvas.config(background='DarkOrange3')
+    waypoint_canvas.grid(columnspan=5, row=3, column=1)
     waypoint_canvas.bind("<Button-1>", lambda event: handle_mouse_click(
         event, waypoint))
 
     clear_waypoint_button = ttk.Button(frame, text="Clear Waypoint")
-    clear_waypoint_button.grid()
+    clear_waypoint_button.grid(row=4, column=5)
     clear_waypoint_button['command'] = lambda: waypoint_canvas.delete("all")
 
     root.mainloop()
@@ -69,7 +72,6 @@ def handle_mouse_click(click_event, waypoint):
 
     waypoint.x = x
     waypoint.y = y
-    # return Waypoint(click_event.x, click_event.y)
 
 
 main()
