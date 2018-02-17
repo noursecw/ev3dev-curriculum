@@ -32,6 +32,8 @@ class Snatch3r(object):
         self.ir_sensor = ev3.InfraredSensor()
         self.pixy = ev3.Sensor(driver_name="pixy-lego")
 
+        self.distance_to_wp = 0  # for Aaron's project
+
         assert self.pixy
         assert self.ir_sensor
         assert self.color_sensor
