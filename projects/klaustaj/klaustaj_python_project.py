@@ -101,10 +101,10 @@ class Robot(object):
         delta_y = self.wp.y - self.cl.y
         return math.sqrt(delta_x ** 2 + delta_y ** 2)
 
-    def update_cl(self, angle, speed, delta_t):
+    def update_cl(self, speed, delta_t):
         speed_inps = 0.0103 * speed + 0.3152
-        delta_x = speed_inps * delta_t * math.sin(angle)
-        delta_y = speed_inps * delta_t * math.cos(angle)
+        delta_x = speed_inps * delta_t * math.sin(self.angle)
+        delta_y = speed_inps * delta_t * math.cos(self.angle)
         self.cl.x = self.cl.x + delta_x
         self.cl.y = self.cl.y + delta_y
 
@@ -132,7 +132,7 @@ def goto(my_delegate, wp, start, speed, retrieve=False):
     # print('retrieve = ', retrieve)
     threshold = 50
 
-    current_location = start.clone()
+    v_robot = Robot(wp, start)
 
     while True:
         turn_degrees(angle_to_wp(wp, start))
