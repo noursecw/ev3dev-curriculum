@@ -4,12 +4,24 @@
 
 import robot_controller_noursecw as robo
 import ev3dev.ev3 as ev3
-import math
+import mqtt_remote_method_calls as com
 
-robot = robo.Snatch3r
+
+# import math
+
 
 
 def main():
+    robot = robo.Snatch3r()
+    mqtt_client = com.MqttClient(robot)
+    mqtt_client.connect_to_pc()
+    # mqtt_client.connect_to_pc("35.194.247.175")  # Off campus IP address of a GCP broker
+    rc1 = ev3.RemoteControl(channel=1)
+    while not rc1.beacon:
+        robot.loop_forever()  # Calls a function that has a while True: loop within it to avoid letting the program end.
+    robot.shutdown()
+    if rc1.beacon:
+        robot.memory_replay()
 
 
 def mqtt_control():
