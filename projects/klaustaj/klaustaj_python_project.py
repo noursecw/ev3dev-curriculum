@@ -9,10 +9,14 @@ class MyDelegate(object):
     def __init__(self):
         self.pixy_x = 0
         self.pixy_y = 0
+        self.ir_dist = 0
 
     def pixy_coords(self, x, y):
         self.pixy_x = x
         self.pixy_y = y
+
+    def ir_dist(self, dist):
+        self.ir_dist = dist
 
 
 def main():
@@ -30,15 +34,16 @@ def main():
 
     goto_and_retrieve_button = ttk.Button(frame, text="Go To and Retrieve")
     goto_and_retrieve_button.grid(row=2, column=3)
-    goto_and_retrieve_button['command'] = lambda: goto(my_delegate, waypoint,
+    goto_and_retrieve_button['command'] = lambda: goto(mqtt_client,
+                                                       my_delegate, waypoint,
                                                        start,
                                                        speed_entry.get(),
                                                        retrieve=True)
 
     goto_button = ttk.Button(frame, text="Go To")
     goto_button.grid(row=2, column=4)
-    goto_button['command'] = lambda: goto(my_delegate, waypoint, start,
-                                          speed_entry.get())
+    goto_button['command'] = lambda: goto(mqtt_client, my_delegate, waypoint,
+                                          start, speed_entry.get())
 
     speed_label = ttk.Label(frame, text='Speed:')
     speed_label.grid(row=2, column=1)
@@ -49,8 +54,8 @@ def main():
 
     return_to_base_button = ttk.Button(frame, text="Return to Base")
     return_to_base_button.grid(row=2, column=5)
-    return_to_base_button['command'] = lambda: goto(my_delegate, start,
-                                                    waypoint,
+    return_to_base_button['command'] = lambda: goto(mqtt_client, my_delegate,
+                                                    start, waypoint,
                                                     speed_entry.get())
 
     width = 400
@@ -87,10 +92,6 @@ class Robot(object):
         self.start = start.clone()
         self.wp = wp.clone()
 
-        delta_x = wp.x - start.x
-        delta_y = wp.y - start.y
-        self.wp_angle = math.tan(delta_x / delta_y)
-
     def angle_to_wp(self):
         delta_x = self.wp.x - self.cl.x
         delta_y = self.wp.y - self.cl.y
@@ -120,40 +121,74 @@ def handle_mouse_click(click_event, waypoint):
     waypoint.y = y
 
 
-def goto(my_delegate, wp, start, speed, retrieve=False):
+def goto(mqtt_client, my_delegate, wp, start, speed, retrieve=False):
     """
     Recieves a waypoint and speed. Robot then attempts to travel to waypoint in
     a straight line, but swerves to avoid obstacles when they are detected with
     the pixy camera.
     """
     # print('Go To and Retrieve')
-    # print('waypoint = ', waypoint)
+    # print('waypoint = ', wp)
     # print('speed = ', speed)
     # print('retrieve = ', retrieve)
-    threshold = 50
 
     v_robot = Robot(wp, start)
 
+    threshold = 50
+    target_threshold = 5
+    avoid_dist = 20
+
     while True:
-        turn_degrees(angle_to_wp(wp, start))
+        turn_degrees(mqtt_client, v_robot.angle_to_wp() - v_robot.angle)
+        v_robot.angle = v_robot.angle_to_wp()
 
-        while not abs(my_delegate.pixy_x - 160) < threshold:
-            drive_forward()
+        while (abs(my_delegate.pixy_x - 160) > threshold) & (
+                    my_delegate.ir_dist > avoid_dist):
+            drive_forward(mqtt_client, speed)
 
-            time.sleep(0.1)
-            current_location.update()
+            delta_t = 0.1
+            time.sleep(delta_t)
+            v_robot.update_cl(speed, delta_t)
 
-            if distance_to_wp()
+            if v_robot.distance_to_wp() < target_threshold:
+                print("Waypoint Reached")
+                return
 
-        while True:
-            if
+        if abs(my_delegate.pixy_x - 160) < threshold:
+            if my_delegate.pixy_x <= 160:
+                avoid(mqtt_client, my_delegate, v_robot, speed, 1, threshold)
+
+            if my_delegate.pixy_x > 160:
+                avoid(mqtt_client, my_delegate, v_robot, speed, -1, threshold)
+
+
+def avoid(mqtt_client, my_delegate, v_robot, speed, angle_increment,
+          threshold):
+    while abs(my_delegate.pixy_x - 160) < threshold:
+        turn_degrees(mqtt_client, angle_increment, speed)
+        v_robot.angle = v_robot.angle + angle_increment
+
+    while abs(v_robot.angle - v_robot.angle_to_wp) > 3:
+        drive_forward(mqtt_client, speed)
+
+        delta_t = 1
+        time.sleep(delta_t)
+        v_robot.update_cl(speed, delta_t)
+
+        while abs(my_delegate.pixy_x - 160) > threshold:
+            turn_degrees(mqtt_client, -angle_increment, speed)
+            v_robot.angle = v_robot.angle - angle_increment
+
+            if abs(v_robot.angle - v_robot.angle_to_wp) > 3:
+                break
 
 
 def turn_degrees(mqtt_client, angle, speed):
+    mqtt_client.send_message("turn_degrees", [angle, speed])
 
 
-def drive_forward():
-
+def drive_forward(mqtt_client, speed):
+    mqtt_client.send_message("drive_forward", [speed])
 
 
 main()
