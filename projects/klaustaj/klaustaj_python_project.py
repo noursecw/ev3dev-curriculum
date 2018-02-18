@@ -3,6 +3,7 @@ from tkinter import ttk
 import mqtt_remote_method_calls as com
 import math
 import time
+import rosegraphics as rg
 
 
 class MyDelegate(object):
@@ -85,6 +86,17 @@ class Point(object):
         return Point(self.x, self.y)
 
 
+def handle_mouse_click(click_event, waypoint):
+    x = click_event.x
+    y = click_event.y
+    r = 3
+    click_event.widget.delete("all")
+    click_event.widget.create_oval(x - r, y - r, x + r, y + r, fill="blue")
+
+    waypoint.x = x
+    waypoint.y = y
+
+
 class Robot(object):
     def __init__(self, start, wp):
         self.angle = 0
@@ -110,17 +122,6 @@ class Robot(object):
         self.cl.y = self.cl.y + delta_y
 
 
-def handle_mouse_click(click_event, waypoint):
-    x = click_event.x
-    y = click_event.y
-    r = 3
-    click_event.widget.delete("all")
-    click_event.widget.create_oval(x - r, y - r, x + r, y + r, fill="blue")
-
-    waypoint.x = x
-    waypoint.y = y
-
-
 def goto(mqtt_client, my_delegate, wp, start, speed, retrieve=False):
     """
     Recieves a waypoint and speed. Robot then attempts to travel to waypoint in
@@ -131,6 +132,8 @@ def goto(mqtt_client, my_delegate, wp, start, speed, retrieve=False):
     # print('waypoint = ', wp)
     # print('speed = ', speed)
     # print('retrieve = ', retrieve)
+
+    window = rg.RoseWindow(400, 500)
 
     v_robot = Robot(wp, start)
 
@@ -148,7 +151,13 @@ def goto(mqtt_client, my_delegate, wp, start, speed, retrieve=False):
 
             delta_t = 0.1
             time.sleep(delta_t)
+
+            cl = v_robot.cl.clone  # for v_robot graphic
             v_robot.update_cl(speed, delta_t)
+
+            line = rg.Line(cl, v_robot.cl)  # for v_robot graphic
+            line.attach_to(window)  # for v_robot graphic
+            window.render()  # for v_robot graphic
 
             if v_robot.distance_to_wp() < target_threshold:
                 print("Waypoint Reached")
@@ -156,14 +165,20 @@ def goto(mqtt_client, my_delegate, wp, start, speed, retrieve=False):
 
         if abs(my_delegate.pixy_x - 160) < threshold:
             if my_delegate.pixy_x <= 160:
-                avoid(mqtt_client, my_delegate, v_robot, speed, 1, threshold)
+                avoid(mqtt_client, my_delegate, v_robot, speed, 1,
+                      threshold, window)
 
             if my_delegate.pixy_x > 160:
-                avoid(mqtt_client, my_delegate, v_robot, speed, -1, threshold)
+                avoid(mqtt_client, my_delegate, v_robot, speed, -1,
+                      threshold, window)
+
+        if v_robot.distance_to_wp() < target_threshold:
+            print("Waypoint Reached")
+            return
 
 
 def avoid(mqtt_client, my_delegate, v_robot, speed, angle_increment,
-          threshold):
+          threshold, window):
     while abs(my_delegate.pixy_x - 160) < threshold:
         turn_degrees(mqtt_client, angle_increment, speed)
         v_robot.angle = v_robot.angle + angle_increment
@@ -173,7 +188,13 @@ def avoid(mqtt_client, my_delegate, v_robot, speed, angle_increment,
 
         delta_t = 1
         time.sleep(delta_t)
+
+        cl = v_robot.cl.clone()  # for v_robot graphic
         v_robot.update_cl(speed, delta_t)
+
+        line = rg.Line(cl, v_robot.cl)  # for v_robot graphic
+        line.attach_to(window)  # for v_robot graphic
+        window.render()  # for v_robot graphic
 
         while abs(my_delegate.pixy_x - 160) > threshold:
             turn_degrees(mqtt_client, -angle_increment, speed)
