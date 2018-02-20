@@ -7,10 +7,18 @@ import ev3dev.ev3 as ev3
 import mqtt_remote_method_calls as com
 
 
+class DataContainer(object):
+    """ Helper class that might be useful to communicate between different callbacks."""
+
+    def __init__(self):
+        self.running = True
+
+
 def main():
     robot = robo.Snatch3r()
     mqtt_client = com.MqttClient(robot)
     mqtt_client.connect_to_pc()
+    dc = DataContainer()
     # mqtt_client.connect_to_pc("35.194.247.175")  # Off campus IP address of a GCP broker
     rc1 = ev3.RemoteControl(channel=1)
     while not rc1.beacon:

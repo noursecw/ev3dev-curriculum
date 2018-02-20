@@ -18,6 +18,7 @@ def main():
     dc = DataContainer()
     command_handler = CommandHandler(robot)
     mqtt_client = com.MqttClient(command_handler)
+    command_handler.mqtt_client = mqtt_client
     mqtt_client.connect_to_pc()
 
     while not robot.touch_sensor.is_pressed and dc.running:
@@ -30,6 +31,7 @@ class CommandHandler:
     def __init__(self, robot):
         self.robot = robot
         self.commands = []
+        self.mqtt_client = None
 
     def receive_commands(self, commands):
         self.commands = commands
@@ -65,11 +67,13 @@ class CommandHandler:
                 self.robot.turn_left(100, 100)
             elif x > 170:
                 self.robot.turn_right(100, 100)
-            elif x >= 150 and x <= 170:
+            elif 150 <= x <= 170:
                 self.robot.stop()
                 beacon = True
 
         distance = self.robot.pixy.value(3) * 1
+
+        self.mqtt_client.send_message('on_distance_receive', [distance])
 
     def forward_10(self):
         self.robot.drive_inches(10, 300)
