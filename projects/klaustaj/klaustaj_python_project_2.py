@@ -7,25 +7,17 @@ import time
 
 class MyDelegate(object):
     def __init__(self):
-        self.pixy_x = 0
-        self.pixy_y = 0
         self.ir_dist = 0
 
-    def pixy_coords(self, x, y):
-        self.pixy_x = x
-        self.pixy_y = y
-        print(x, y)
-
-    def ir_dist(self, dist):
+    def get_ir_dist(self, dist):
         self.ir_dist = dist
+        print(self.ir_dist)
 
 
 def main():
     my_delegate = MyDelegate()
     mqtt_client = com.MqttClient(my_delegate)
     mqtt_client.connect_to_ev3()
-
-    print(my_delegate.ir_dist)
 
     start = Point(200, 450)
     waypoint = Point(0, 0)
@@ -129,53 +121,34 @@ def goto(mqtt_client, my_delegate, wp, start, speed_entry):
                      speed_entry)
         v_robot.angle = v_robot.angle_to_wp()
 
-        while abs(my_delegate.pixy_x - 160) < threshold:
+        drive_forward(mqtt_client, speed_entry)
 
-            drive_forward(mqtt_client, speed_entry)
+        delta_t = 0.1
+        time.sleep(delta_t)
 
-            delta_t = 0.1
-            time.sleep(delta_t)
+        v_robot.update_cl(speed_entry, delta_t)
 
-            v_robot.update_cl(speed_entry, delta_t)
-
-            if v_robot.distance_to_wp() < target_dist:
-                print("Waypoint Reached")
-                return
-
-        if abs(my_delegate.pixy_x - 160) < threshold:
-            if my_delegate.pixy_x <= 160:
-                avoid(mqtt_client, my_delegate, v_robot, speed_entry, 1,
+        while True:
+            if my_delegate.ir_dist < threshold:
+                avoid(mqtt_client, my_delegate, v_robot, speed_entry,
                       threshold)
-
-            if my_delegate.pixy_x > 160:
-                avoid(mqtt_client, my_delegate, v_robot, speed_entry, -1,
-                      threshold)
+                break
 
         if v_robot.distance_to_wp() < target_dist:
             print("Waypoint Reached")
             return
 
 
-def avoid(mqtt_client, my_delegate, v_robot, speed, angle_increment,
-          threshold):
-    while abs(my_delegate.pixy_x - 160) < threshold:
-        turn_degrees(mqtt_client, angle_increment, speed)
-        v_robot.angle = v_robot.angle + angle_increment
+def avoid(mqtt_client, my_delegate, v_robot, speed_entry, threshold):
+    while my_delegate.ir_dist < threshold:
+        turn_degrees(mqtt_client, 5, speed_entry)
+        v_robot.angle = v_robot.angle + 5
 
-    while abs(v_robot.angle - v_robot.angle_to_wp) > 3:
-        drive_forward(mqtt_client, speed)
+    turn_degrees(mqtt_client, 10, speed_entry)
+    v_robot.angle = v_robot.angle + 10
 
-        delta_t = 1
-        time.sleep(delta_t)
-
-        v_robot.update_cl(speed, delta_t)
-
-        while abs(my_delegate.pixy_x - 160) > threshold:
-            turn_degrees(mqtt_client, -angle_increment, speed)
-            v_robot.angle = v_robot.angle - angle_increment
-
-            if abs(v_robot.angle - v_robot.angle_to_wp) > 3:
-                break
+    drive_forward(mqtt_client, speed_entry)
+    time.sleep(3)
 
 
 def turn_degrees(mqtt_client, angle, speed_entry):
@@ -185,7 +158,8 @@ def turn_degrees(mqtt_client, angle, speed_entry):
 
 def drive_forward(mqtt_client, speed_entry):
     print('drive_forward')
-    mqtt_client.send_message("drive_forward", [int(speed_entry.get())])
+    mqtt_client.send_message("drive_forward",
+                             [int(speed_entry.get()), int(speed_entry.get())])
 
 
 main()
