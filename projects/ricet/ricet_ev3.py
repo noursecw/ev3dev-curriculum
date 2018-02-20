@@ -3,6 +3,10 @@ import robot_controller as robo
 
 
 def main():
+    print("/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/")
+    print("RICET EV3")
+    print("/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/")
+
     robot = robo.Snatch3r()
     command_handler = CommandHandler(robot)
     mqtt_client = com.MqttClient(command_handler)
