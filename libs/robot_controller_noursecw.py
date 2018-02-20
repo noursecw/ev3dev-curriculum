@@ -17,11 +17,9 @@ import math
 
 
 class Snatch3r(object):
-    """Commands for the Snatch3r robot that might be useful in many different programs."""
+    """Commands for the Snatch3r robot that might be useful in many different programs.
+        Use *_amnesia methods for memory replay to avoid infinite loops."""
 
-    # DONE: Implement the Snatch3r class as needed when working the sandox
-    # exercises
-    # (and delete these comments)
     def __init__(self):
         self.left_motor = ev3.LargeMotor(ev3.OUTPUT_B)
         self.right_motor = ev3.LargeMotor(ev3.OUTPUT_C)
@@ -128,6 +126,17 @@ class Snatch3r(object):
         self.arm_motor.stop(stop_action="brake")
         ev3.Sound.beep()
 
+    def arm_up_amnesia(self):  # 4
+        """
+        Moves the Snatch3r arm to the up position.
+        Does not record action to memory.
+        """
+        self.arm_motor.run_forever(speed_sp=900)
+        while not self.touch_sensor.is_pressed:
+            time.sleep(0.01)
+        self.arm_motor.stop(stop_action="brake")
+        ev3.Sound.beep()
+
     def arm_down(self):  # 5
         """
         Moves the Snatch3r arm to the down position.
@@ -141,16 +150,34 @@ class Snatch3r(object):
         # running
         ev3.Sound.beep()
 
+    def arm_down_amnesia(self):  # 5
+        """
+        Moves the Snatch3r arm to the down position. Does not record action to memory.
+        """
+        self.arm_motor.run_to_abs_pos(position_sp=0, speed_sp=900)
+        self.arm_motor.wait_while(
+            ev3.Motor.STATE_RUNNING)  # Blocks until the motor finishes
+        # running
+        ev3.Sound.beep()
+
     def loop_forever(self):  # 6
         """provides a running variable to loop code until self.running is set to False"""
         self.running = True
         while self.running:
             time.sleep(0.1)
 
-    def shutdown(self):  #7
+    def shutdown(self):  # 7
         """Halts all motors on the EV3 Robot and setes running variable to False"""
 
         self.memory += [(7, time.time())]
+
+        self.running = False
+        self.arm_motor.stop(stop_action='brake')
+        self.left_motor.stop(stop_action='brake')
+        self.right_motor.stop(stop_action='brake')
+
+    def shutdown_amnesia(self):  # 7
+        """Halts all motors on the EV3 Robot and setes running variable to False. Does not record action to memory"""
 
         self.running = False
         self.arm_motor.stop(stop_action='brake')
@@ -162,6 +189,13 @@ class Snatch3r(object):
             Both speed parameters should be positive."""
 
         self.memory += [(8, time.time(), left_speed, right_speed)]
+
+        self.left_motor.run_forever(speed_sp=left_speed)
+        self.right_motor.run_forever(speed_sp=right_speed)
+
+    def drive_forward_amnesia(self, left_speed, right_speed):  # 8
+        """Drives the robot forward with each motor moving at the specified speed.
+            Both speed parameters should be positive. Does not record action to memory."""
 
         self.left_motor.run_forever(speed_sp=left_speed)
         self.right_motor.run_forever(speed_sp=right_speed)
@@ -200,14 +234,19 @@ class Snatch3r(object):
         self.left_motor.stop(stop_action='brake')
         self.right_motor.stop(stop_action='brake')
 
+    def stop_amnesia(self):  # 11
+        """Halts all motors on the robot. Does not set running variable to False. Does not record action to memory."""
+        self.arm_motor.stop(stop_action='brake')
+        self.left_motor.stop(stop_action='brake')
+        self.right_motor.stop(stop_action='brake')
+
     def drive_timed(self, left_speed, right_speed, running_time):
         """drives for the specified amount of time and then halts"""
         t = time.time()
         while (running_time - t) > 0:
-            self.drive_forward(left_speed, right_speed)
+            self.drive_forward_amnesia(left_speed, right_speed)
             time.sleep(0.01)
-        self.stop()
-
+        self.stop_amnesia()
 
     def seek_beacon(self):
         """
@@ -270,15 +309,15 @@ class Snatch3r(object):
             action = mem[k]
             for j in range(len(action)):
                 if action[0] == 4:
-                    self.arm_up()
+                    self.arm_up_amnesia()
                 elif action[0] == 5:
-                    self.arm_down()
+                    self.arm_down_amnesia()
                 elif action[0] == 7:
-                    self.shutdown()
+                    self.shutdown_amnesia()
                 elif action[0] == 8:
-                    running_time = action[1] - mem[k + 1][1]
+                    running_time = action[1] - mem[k + 1][1]  # time until next action
                     self.drive_timed(action[2], action[3], running_time)
                 elif action[0] == 11:
-                    self.stop()
+                    self.stop_amnesia()
         ev3.Sound.beep()
-        self.stop()
+        self.stop_amnesia()
