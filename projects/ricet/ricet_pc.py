@@ -12,7 +12,6 @@ import random
 import mqtt_remote_method_calls as com
 
 
-# class EventHandler(object):
 class UIhandler(object):
     def __init__(self):
         self.commands = []
@@ -33,7 +32,6 @@ class UIhandler(object):
         if uicommands is not None:
             uicommands.set_commands()
 
-
     def on_distance_recieve(self, distance):
         print("Made it to ", distance, " inches away")
         messagebox.showinfo(title='Congratulations!', message='You made '
@@ -41,7 +39,11 @@ class UIhandler(object):
 
     def send_commands(self, event, mqtt_client, uicommands):
         print("Sending commands")
-        mqtt_client.send_message('recieve_commands', [uicommands.commandVals])
+        send_commands = []
+        for i in range(len(uicommands.commandVals)):
+            send_commands.append(uicommands.commandVals[i].get())
+
+        mqtt_client.send_message('recieve_commands', send_commands)
 
     def run_commands(self, event, mqtt_client):
         print("Running commands")
