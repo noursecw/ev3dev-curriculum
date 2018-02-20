@@ -15,9 +15,13 @@ def main():
     rc1 = ev3.RemoteControl(channel=1)
     while not rc1.beacon:
         robot.loop_forever()  # Calls a function that has a while True: loop within it to avoid letting the program end.
-    robot.shutdown()
+        if rc1.beacon:
+            robot.shutdown()
+            break
     if rc1.beacon:
+        print("beacon")
         robot.memory_replay()
+    robot.shutdown()
 
 
 def mqtt_control():
