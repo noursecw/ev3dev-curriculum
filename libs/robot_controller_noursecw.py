@@ -72,16 +72,16 @@ class Snatch3r(object):
 
         # self.memory += [(2, time.time(), degrees_to_turn, turn_speed_sp)]
 
-        if degrees_to_turn > 0:
+        # if degrees_to_turn > 0:
+        #
+        #     left_sp = -turn_speed_sp
+        #     right_sp = turn_speed_sp
+        #
+        # else:
+        #     left_sp = turn_speed_sp
+        #     right_sp = -turn_speed_sp
 
-            left_sp = -turn_speed_sp
-            right_sp = turn_speed_sp
-
-        else:
-            left_sp = turn_speed_sp
-            right_sp = -turn_speed_sp
-
-        d = 4.7
+        d = 5.3
         turn_sp = d * degrees_to_turn
 
         if degrees_to_turn > 0:
@@ -92,12 +92,10 @@ class Snatch3r(object):
             right_turn = -turn_sp
 
         self.left_motor.run_to_rel_pos(position_sp=left_turn,
-                                       speed_sp=left_sp,
-                                       stop_action=ev3.Motor.STOP_ACTION_BRAKE)
+                                       speed_sp=turn_sp)
 
         self.right_motor.run_to_rel_pos(position_sp=right_turn,
-                                        speed_sp=right_sp,
-                                        stop_action=ev3.Motor.STOP_ACTION_BRAKE)
+                                        speed_sp=turn_sp)
 
         self.right_motor.wait_while(ev3.Motor.STATE_RUNNING)
         self.left_motor.wait_while(ev3.Motor.STATE_RUNNING)
@@ -144,6 +142,7 @@ class Snatch3r(object):
         Moves the Snatch3r arm to the up position.
         Does not record action to memory.
         """
+        print("arm up")
         self.arm_motor.run_forever(speed_sp=900)
         while not self.touch_sensor.is_pressed:
             time.sleep(0.01)
@@ -266,21 +265,33 @@ class Snatch3r(object):
             print(self.ir_sensor.proximity)
             if self.ir_sensor.proximity < 12:  # if there is an object blocking the path, move it out of the way
                 print("object")
+                ev3.Sound.beep()
                 self.left_motor.stop(stop_action='coast')
                 self.right_motor.stop(stop_action='coast')
                 self.elapsed = time.time() - ti
+                self.execute_move_object(left_speed, right_speed, running_time - self.elapsed)
                 break
             time.sleep(0.01)
 
-        if self.ir_sensor.proximity < 12:
-            # self.stop_amnesia()
-            self.move_object()
-            # self.arm_motor.wait_while(ev3.Motor.STATE_RUNNING)  # block code execution
-            # self.left_motor.wait_while(ev3.Motor.STATE_RUNNING)
-            # self.right_motor.wait_while(ev3.Motor.STATE_RUNNING)
-            self.drive_timed(left_speed, right_speed, running_time - self.elapsed)  # finish original drive function
+        # if self.ir_sensor.proximity < 12:
+        #     # self.stop_amnesia()
+        #     print("move object 279")
+        #     self.move_object()
+        #     # self.arm_motor.wait_while(ev3.Motor.STATE_RUNNING)  # block code execution
+        #     # self.left_motor.wait_while(ev3.Motor.STATE_RUNNING)
+        #     # self.right_motor.wait_while(ev3.Motor.STATE_RUNNING)
+        #     self.drive_timed(left_speed, right_speed, running_time - self.elapsed)  # finish original drive function
 
         self.stop_amnesia()
+
+    def execute_move_object(self, left_speed, right_speed, time_remaining):
+        """exceutes the move object function and completes the rest of the drive movement."""
+        print("move object 290")
+        self.move_object()
+        # self.arm_motor.wait_while(ev3.Motor.STATE_RUNNING)  # block code execution
+        # self.left_motor.wait_while(ev3.Motor.STATE_RUNNING)
+        # self.right_motor.wait_while(ev3.Motor.STATE_RUNNING)
+        self.drive_timed(left_speed, right_speed, time_remaining)  # finish original drive function
 
     def stop_timed(self, stop_time):
         """stops for the specified amount of time; used in playback. Does not record action to memory."""
@@ -344,13 +355,14 @@ class Snatch3r(object):
 
     def move_object(self):
         """moves an object out of the way and returns to original position."""
+        print("move object")
         self.arm_up_amnesia()
-        self.arm_motor.wait_while(ev3.Motor.STATE_RUNNING)
+        # self.arm_motor.wait_while(ev3.Motor.STATE_RUNNING)
         self.turn_degrees(90, 200)
         self.drive_inches(4, 300)
         self.arm_down_amnesia()
         self.drive_inches(-4, 300)
-        self.turn_degrees(-90, 200)
+        self.turn_degrees(270, 200)
 
     def memory_replay(self):
         """repeats the actions performed by the user."""
