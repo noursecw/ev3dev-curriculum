@@ -32,7 +32,6 @@ class Snatch3r(object):
         self.ir_sensor = ev3.InfraredSensor()
         self.pixy = ev3.Sensor(driver_name="pixy-lego")
 
-
         assert self.pixy
         assert self.ir_sensor
         assert self.color_sensor
@@ -77,7 +76,7 @@ class Snatch3r(object):
         d = 4.7
         turn_sp = d * degrees_to_turn
 
-        self.left_motor.run_to_rel_pos(position_sp=turn_sp,
+        self.left_motor.run_to_rel_pos(position_sp=-turn_sp,
                                        speed_sp=left_sp,
                                        stop_action=ev3.Motor.STOP_ACTION_BRAKE)
 

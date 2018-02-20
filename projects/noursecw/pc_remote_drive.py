@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-This script utilizes code from sandbox/noursecw/mqtt/m5_pc_remote_drive.py. Running it allows remote control of the
-EV3 robot via GUI utilizing MQTT.
+This script utilizes code from sandbox/noursecw/mqtt/m5_pc_remote_drive.py (altered to momentary buttons)
+ Running it allows remote control of the EV3 robot via GUI utilizing MQTT.
 """
 
 import tkinter

@@ -82,7 +82,7 @@ def follow_the_line(robot, white_level, black_level):
     while True:
         time.sleep(0.01)
         speed = 500
-        speed_turn = 200
+        speed_turn = 100
         if robot.touch_sensor.is_pressed:
             print('break')
             break
