@@ -100,7 +100,6 @@ def main():
 # Tkinter callbacks
 # ----------------------------------------------------------------------
 
-
 def drive_forward(mqtt_client, left_speed_entry, right_speed_entry):
     print("drive forward")
     mqtt_client.send_message("drive_forward", [int(left_speed_entry.get()),
@@ -109,8 +108,8 @@ def drive_forward(mqtt_client, left_speed_entry, right_speed_entry):
 
 def turn_left(mqtt_client, left_speed_entry, right_speed_entry):
     print("turn left")
-    mqtt_client.send_message("turn_left", [int(left_speed_entry.get()),
-                                           int(right_speed_entry.get())])
+    mqtt_client.send_message("drive_forward", [-int(left_speed_entry.get()),
+                                               int(right_speed_entry.get())])
 
 
 def stop(mqtt_client):
@@ -120,14 +119,14 @@ def stop(mqtt_client):
 
 def turn_right(mqtt_client, left_speed_entry, right_speed_entry):
     print("turn right")
-    mqtt_client.send_message("turn_right", [int(left_speed_entry.get()),
-                                            int(right_speed_entry.get())])
+    mqtt_client.send_message("drive_forward", [int(left_speed_entry.get()),
+                                               -int(right_speed_entry.get())])
 
 
 def drive_backwards(mqtt_client, left_speed_entry, right_speed_entry):
     print("drive_backwards")
-    mqtt_client.send_message("drive_backwards", [int(left_speed_entry.get()),
-                                                 int(right_speed_entry.get())])
+    mqtt_client.send_message("drive_forward", [-int(left_speed_entry.get()),
+                                               -int(right_speed_entry.get())])
 
 
 # Arm command callbacks

@@ -15,21 +15,20 @@ import ev3dev.ev3 as ev3
 import time
 import math
 
-
 class Snatch3r(object):
     """Commands for the Snatch3r robot that might be useful in many different programs.
         Use *_amnesia methods for memory replay to avoid infinite loops."""
 
     def __init__(self):
         self.left_motor = ev3.LargeMotor(ev3.OUTPUT_B)
-        self.right_motor = ev3.LargeMotor(ev3.OUTPUT_C)
+        self.right_motor = ev3.LargeMotor(ev3.OUTPUT_D)  # output D for broken robot
         self.arm_motor = ev3.MediumMotor(ev3.OUTPUT_A)
         self.touch_sensor = ev3.TouchSensor(ev3.INPUT_1)
         self.running = False
         self.color_sensor = ev3.ColorSensor()
         self.ir_sensor = ev3.InfraredSensor()
         self.pixy = ev3.Sensor(driver_name="pixy-lego")
-        self.memory = []  # format: [(action type, (parameters), time)]
+        self.memory = []  # format: [(action type, time, (parameters))]
 
         assert self.pixy
         assert self.ir_sensor
@@ -163,8 +162,12 @@ class Snatch3r(object):
     def loop_forever(self):  # 6
         """provides a running variable to loop code until self.running is set to False"""
         self.running = True
+        rc1 = ev3.RemoteControl(channel=1)
         while self.running:
             time.sleep(0.1)
+            if rc1.beacon:
+                self.running = False
+                break
 
     def shutdown(self):  # 7
         """Halts all motors on the EV3 Robot and setes running variable to False"""
@@ -241,9 +244,10 @@ class Snatch3r(object):
         self.right_motor.stop(stop_action='brake')
 
     def drive_timed(self, left_speed, right_speed, running_time):
-        """drives for the specified amount of time and then halts"""
-        t = time.time()
-        while (running_time - t) > 0:
+        """drives for the specified amount of time and then halts. DOES NOT record to memory."""
+        ti = time.time()
+        while (running_time - (time.time() - ti)) > 0:
+            # print("driving")
             self.drive_forward_amnesia(left_speed, right_speed)
             time.sleep(0.01)
         self.stop_amnesia()
@@ -315,7 +319,9 @@ class Snatch3r(object):
                 elif action[0] == 7:
                     self.shutdown_amnesia()
                 elif action[0] == 8:
-                    running_time = action[1] - mem[k + 1][1]  # time until next action
+                    # print("replay drive")
+                    running_time = mem[k + 1][1] - action[1]  # time until next action
+                    print(action[1], mem[k + 1][1], running_time, action[2], action[3])
                     self.drive_timed(action[2], action[3], running_time)
                 elif action[0] == 11:
                     self.stop_amnesia()
