@@ -2,17 +2,28 @@ import mqtt_remote_method_calls as com
 import robot_controller as robo
 
 
+class DataContainer(object):
+    """ Helper class that might be useful to communicate between different callbacks."""
+
+    def __init__(self):
+        self.running = True
+
+
 def main():
     print("/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/")
     print("RICET EV3")
     print("/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/")
 
     robot = robo.Snatch3r()
+    dc = DataContainer()
     command_handler = CommandHandler(robot)
     mqtt_client = com.MqttClient(command_handler)
     mqtt_client.connect_to_pc()
 
-    robot.loop_forever()
+    while not robot.touch_sensor.is_pressed and dc.running:
+        print('running')
+
+    print("Goodbye!")
 
 
 class CommandHandler:
@@ -25,6 +36,7 @@ class CommandHandler:
         print(self.commands)
 
     def run_commands(self):
+        beacon = False
         for i in range(len(self.commands)):
             if self.commands[i] == 'forward_10':
                 self.forward_10()
@@ -42,10 +54,22 @@ class CommandHandler:
                 self.turn_right_45()
             elif self.commands[i] == 'turn_left_45':
                 self.turn_left_45()
-            elif self.commands[i] == 'turn_1808':
+            elif self.commands[i] == 'turn_180':
                 self.turn_180()
             else:
                 print('Not a command')
+
+        while not beacon:
+            x = self.robot.pixy.value(1)
+            if x < 150:
+                self.robot.turn_left(100, 100)
+            elif x > 170:
+                self.robot.turn_right(100, 100)
+            elif x >= 150 and x <= 170:
+                self.robot.stop()
+                beacon = True
+
+        distance = self.robot.pixy.value(3) * 1
 
     def forward_10(self):
         self.robot.drive_inches(10, 300)

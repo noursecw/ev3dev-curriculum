@@ -50,6 +50,10 @@ class UIhandler(object):
         print("Running commands")
         mqtt_client.send_message('run_commands', [])
 
+    def quit(self, event, mqtt_client, root):
+        print('Quitting')
+        root.quit()
+
 
 def main():
     handler = UIhandler()
@@ -83,6 +87,11 @@ def main():
     runcommands.bind("<Button-1>",
                      lambda event: handler.run_commands(event, mqtt_client))
     runcommands.grid(row=5, sticky='W', pady=10)
+
+    quit = ttk.Button(main_frame, padding=4, text='Quit')
+    quit.bind("<Button-1>",
+              lambda event: handler.quit(event, mqtt_client, root))
+    quit.grid(row=5, column=4, sticky='E', pady=10)
 
     root.mainloop()
 
