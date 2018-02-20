@@ -22,7 +22,7 @@ class Snatch3r(object):
 
     def __init__(self):
         self.left_motor = ev3.LargeMotor(ev3.OUTPUT_B)
-        self.right_motor = ev3.LargeMotor(ev3.OUTPUT_D)  # output D for broken robot
+        self.right_motor = ev3.LargeMotor(ev3.OUTPUT_C)  # output D for broken robot
         self.arm_motor = ev3.MediumMotor(ev3.OUTPUT_A)
         self.touch_sensor = ev3.TouchSensor(ev3.INPUT_1)
         self.running = False
@@ -30,6 +30,7 @@ class Snatch3r(object):
         self.ir_sensor = ev3.InfraredSensor()
         self.pixy = ev3.Sensor(driver_name="pixy-lego")
         self.memory = []  # format: [(action type, time, (parameters))]
+        self.elapsed = 0
 
         assert self.pixy
         assert self.ir_sensor
@@ -69,19 +70,32 @@ class Snatch3r(object):
         assert self.left_motor.connected
         assert self.right_motor.connected
 
-        self.memory += [(2, time.time(), degrees_to_turn, turn_speed_sp)]
+        # self.memory += [(2, time.time(), degrees_to_turn, turn_speed_sp)]
 
-        left_sp = turn_speed_sp
-        right_sp = turn_speed_sp
+        if degrees_to_turn > 0:
+
+            left_sp = -turn_speed_sp
+            right_sp = turn_speed_sp
+
+        else:
+            left_sp = turn_speed_sp
+            right_sp = -turn_speed_sp
 
         d = 4.7
         turn_sp = d * degrees_to_turn
 
-        self.left_motor.run_to_rel_pos(position_sp=turn_sp,
+        if degrees_to_turn > 0:
+            left_turn = -turn_sp
+            right_turn = turn_sp
+        else:
+            left_turn = turn_sp
+            right_turn = -turn_sp
+
+        self.left_motor.run_to_rel_pos(position_sp=left_turn,
                                        speed_sp=left_sp,
                                        stop_action=ev3.Motor.STOP_ACTION_BRAKE)
 
-        self.right_motor.run_to_rel_pos(position_sp=turn_sp,
+        self.right_motor.run_to_rel_pos(position_sp=right_turn,
                                         speed_sp=right_sp,
                                         stop_action=ev3.Motor.STOP_ACTION_BRAKE)
 
@@ -164,7 +178,7 @@ class Snatch3r(object):
         self.running = True
         rc1 = ev3.RemoteControl(channel=1)
         while self.running:
-            time.sleep(0.1)
+            time.sleep(0.01)
             if rc1.beacon:
                 self.running = False
                 break
@@ -249,7 +263,23 @@ class Snatch3r(object):
         while (running_time - (time.time() - ti)) > 0:  # (while elapsed time is less than the running time)
             # print("driving")
             self.drive_forward_amnesia(left_speed, right_speed)
+            print(self.ir_sensor.proximity)
+            if self.ir_sensor.proximity < 12:  # if there is an object blocking the path, move it out of the way
+                print("object")
+                self.left_motor.stop(stop_action='coast')
+                self.right_motor.stop(stop_action='coast')
+                self.elapsed = time.time() - ti
+                break
             time.sleep(0.01)
+
+        if self.ir_sensor.proximity < 12:
+            # self.stop_amnesia()
+            self.move_object()
+            # self.arm_motor.wait_while(ev3.Motor.STATE_RUNNING)  # block code execution
+            # self.left_motor.wait_while(ev3.Motor.STATE_RUNNING)
+            # self.right_motor.wait_while(ev3.Motor.STATE_RUNNING)
+            self.drive_timed(left_speed, right_speed, running_time - self.elapsed)  # finish original drive function
+
         self.stop_amnesia()
 
     def stop_timed(self, stop_time):
@@ -259,7 +289,6 @@ class Snatch3r(object):
             # print("driving")
             self.stop_amnesia()
             time.sleep(0.01)
-
 
     def seek_beacon(self):
         """
@@ -313,32 +342,43 @@ class Snatch3r(object):
         self.stop()
         return False
 
+    def move_object(self):
+        """moves an object out of the way and returns to original position."""
+        self.arm_up_amnesia()
+        self.arm_motor.wait_while(ev3.Motor.STATE_RUNNING)
+        self.turn_degrees(90, 200)
+        self.drive_inches(4, 300)
+        self.arm_down_amnesia()
+        self.drive_inches(-4, 300)
+        self.turn_degrees(-90, 200)
+
     def memory_replay(self):
         """repeats the actions performed by the user."""
         mem = self.memory
         length = len(mem)
         # time_elapsed = 0
-        for k in range(length):
-            action = mem[k]
+        while not self.touch_sensor.is_pressed:  # press touch sensor to abort
+            for k in range(length):
+                action = mem[k]
+                if action[0] == 4:
+                    self.arm_up_amnesia()
+                elif action[0] == 5:
+                    self.arm_down_amnesia()
+                elif action[0] == 7:
+                    self.shutdown_amnesia()
+                elif action[0] == 8:  # drive_forward handles all drive actions by alteration of the speed signs.
+                    # print("replay drive")
+                    running_time = mem[k + 1][1] - action[1]  # time until next action
+                    # print(action[1], mem[k + 1][1], running_time, action[2], action[3])
+                    self.drive_timed(action[2], action[3], running_time)
+                elif action[0] == 11:
+                    if action.index != len(mem) - 1:  # (if the stop action is not the final action)
+                        stop_time = mem[k + 1][1] - action[1]  # time until next action
+                        self.stop_timed(stop_time)
+                    else:
+                        # print("last stop")
+                        self.stop_amnesia()
 
-            if action[0] == 4:
-                self.arm_up_amnesia()
-            elif action[0] == 5:
-                self.arm_down_amnesia()
-            elif action[0] == 7:
-                self.shutdown_amnesia()
-            elif action[0] == 8:  # drive_forward handles all drive actions by alteration of the speed signs.
-                # print("replay drive")
-                running_time = mem[k + 1][1] - action[1]  # time until next action
-                # print(action[1], mem[k + 1][1], running_time, action[2], action[3])
-                self.drive_timed(action[2], action[3], running_time)
-            elif action[0] == 11:
-                if action.index != len(mem) - 1:  # (if the stop action is not the final action)
-                    stop_time = mem[k + 1][1] - action[1]  # time until next action
-                    self.stop_timed(stop_time)
-                else:
-                    self.stop_amnesia()
-
-
-        ev3.Sound.beep()
-        self.stop_amnesia()
+            ev3.Sound.beep()
+            self.shutdown_amnesia()
+            break
