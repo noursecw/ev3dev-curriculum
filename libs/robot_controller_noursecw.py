@@ -15,6 +15,7 @@ import ev3dev.ev3 as ev3
 import time
 import math
 
+
 class Snatch3r(object):
     """Commands for the Snatch3r robot that might be useful in many different programs.
         Use *_amnesia methods for memory replay to avoid infinite loops."""
@@ -114,7 +115,6 @@ class Snatch3r(object):
     def arm_up(self):  # 4
         """
         Moves the Snatch3r arm to the up position.
-
         """
 
         self.memory += [(4, time.time())]
@@ -246,11 +246,20 @@ class Snatch3r(object):
     def drive_timed(self, left_speed, right_speed, running_time):
         """drives for the specified amount of time and then halts. DOES NOT record to memory."""
         ti = time.time()
-        while (running_time - (time.time() - ti)) > 0:
+        while (running_time - (time.time() - ti)) > 0:  # (while elapsed time is less than the running time)
             # print("driving")
             self.drive_forward_amnesia(left_speed, right_speed)
             time.sleep(0.01)
         self.stop_amnesia()
+
+    def stop_timed(self, stop_time):
+        """stops for the specified amount of time; used in playback. Does not record action to memory."""
+        ti = time.time()
+        while (stop_time - (time.time() - ti)) > 0:  # (while elapsed time is less than the running time)
+            # print("driving")
+            self.stop_amnesia()
+            time.sleep(0.01)
+
 
     def seek_beacon(self):
         """
@@ -311,19 +320,25 @@ class Snatch3r(object):
         # time_elapsed = 0
         for k in range(length):
             action = mem[k]
-            for j in range(len(action)):
-                if action[0] == 4:
-                    self.arm_up_amnesia()
-                elif action[0] == 5:
-                    self.arm_down_amnesia()
-                elif action[0] == 7:
-                    self.shutdown_amnesia()
-                elif action[0] == 8:
-                    # print("replay drive")
-                    running_time = mem[k + 1][1] - action[1]  # time until next action
-                    print(action[1], mem[k + 1][1], running_time, action[2], action[3])
-                    self.drive_timed(action[2], action[3], running_time)
-                elif action[0] == 11:
+
+            if action[0] == 4:
+                self.arm_up_amnesia()
+            elif action[0] == 5:
+                self.arm_down_amnesia()
+            elif action[0] == 7:
+                self.shutdown_amnesia()
+            elif action[0] == 8:  # drive_forward handles all drive actions by alteration of the speed signs.
+                # print("replay drive")
+                running_time = mem[k + 1][1] - action[1]  # time until next action
+                # print(action[1], mem[k + 1][1], running_time, action[2], action[3])
+                self.drive_timed(action[2], action[3], running_time)
+            elif action[0] == 11:
+                if action.index != len(mem) - 1:  # (if the stop action is not the final action)
+                    stop_time = mem[k + 1][1] - action[1]  # time until next action
+                    self.stop_timed(stop_time)
+                else:
                     self.stop_amnesia()
+
+
         ev3.Sound.beep()
         self.stop_amnesia()
