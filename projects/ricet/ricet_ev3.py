@@ -1,12 +1,10 @@
+"""
+Robot code for csse120 project.
+Author: Tiarnan Rice
+"""
+
 import mqtt_remote_method_calls as com
 import robot_controller as robo
-
-
-class DataContainer(object):
-    """ Helper class that might be useful to communicate between different callbacks."""
-
-    def __init__(self):
-        self.running = True
 
 
 def main():
@@ -15,29 +13,32 @@ def main():
     print("/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/")
 
     robot = robo.Snatch3r()
-    dc = DataContainer()
     command_handler = CommandHandler(robot)
     mqtt_client = com.MqttClient(command_handler)
     command_handler.mqtt_client = mqtt_client
     mqtt_client.connect_to_pc()
 
-    while not robot.touch_sensor.is_pressed and dc.running:
-        print('running')
+    while not robot.touch_sensor.is_pressed:
+        print('', end='')
 
     print("Goodbye!")
 
 
 class CommandHandler:
+    """Handles incoming mqtt commands."""
     def __init__(self, robot):
         self.robot = robot
         self.commands = []
         self.mqtt_client = None
 
     def receive_commands(self, commands):
+        """Creates new list to store incoming commands"""
         self.commands = commands
         print(self.commands)
 
     def run_commands(self):
+        """Runs stored commands, checking which command it is then calling
+        the appropriate function in robot_controller"""
         beacon = False
         for i in range(len(self.commands)):
             if self.commands[i] == 'forward_10':
@@ -62,16 +63,19 @@ class CommandHandler:
                 print('Not a command')
 
         while not beacon:
+            print('searching')
             x = self.robot.pixy.value(1)
             if x < 150:
                 self.robot.turn_left(100, 100)
             elif x > 170:
                 self.robot.turn_right(100, 100)
-            elif 150 <= x <= 170:
+            elif x >= 150 and x <= 170:
                 self.robot.stop()
                 beacon = True
 
-        distance = self.robot.pixy.value(3) * 1
+        distance = (self.robot.pixy.value(3) ** 2) * 0.06 + \
+                   self.robot.pixy.value(3) * 4.42 - 3.17
+        print(distance)
 
         self.mqtt_client.send_message('on_distance_receive', [distance])
 
