@@ -12,6 +12,8 @@ def main():
     mqtt_client = com.MqttClient(command_handler)
     mqtt_client.connect_to_pc()
 
+    robot.loop_forever()
+
 
 class CommandHandler:
     def __init__(self, robot):
@@ -20,6 +22,7 @@ class CommandHandler:
 
     def receive_commands(self, commands):
         self.commands = commands
+        print(self.commands)
 
     def run_commands(self):
         for i in range(len(self.commands)):
@@ -35,7 +38,7 @@ class CommandHandler:
                 self.turn_right_90()
             elif self.commands[i] == 'turn_left_90':
                 self.turn_left_90()
-            elif self.ommands[i] == 'turn_right_45':
+            elif self.commands[i] == 'turn_right_45':
                 self.turn_right_45()
             elif self.commands[i] == 'turn_left_45':
                 self.turn_left_45()

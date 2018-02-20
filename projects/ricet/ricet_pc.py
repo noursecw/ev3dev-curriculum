@@ -44,7 +44,7 @@ class UIhandler(object):
             send_commands.append(uicommands.commandVals[i].get())
             print(uicommands.commandVals[i].get())
 
-        mqtt_client.send_message('receive_commands', send_commands)
+        mqtt_client.send_message('receive_commands', [send_commands])
 
     def run_commands(self, event, mqtt_client):
         print("Running commands")

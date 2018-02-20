@@ -24,7 +24,7 @@ class Snatch3r(object):
     # (and delete these comments)
     def __init__(self):
         self.left_motor = ev3.LargeMotor(ev3.OUTPUT_B)
-        self.right_motor = ev3.LargeMotor(ev3.OUTPUT_D)
+        self.right_motor = ev3.LargeMotor(ev3.OUTPUT_C)
         self.arm_motor = ev3.MediumMotor(ev3.OUTPUT_A)
         self.touch_sensor = ev3.TouchSensor(ev3.INPUT_1)
         self.running = False
@@ -76,7 +76,7 @@ class Snatch3r(object):
         d = 4.7
         turn_sp = d * degrees_to_turn
 
-        self.left_motor.run_to_rel_pos(position_sp=turn_sp,
+        self.left_motor.run_to_rel_pos(position_sp=-turn_sp,
                                        speed_sp=left_sp,
                                        stop_action=ev3.Motor.STOP_ACTION_BRAKE)
 
