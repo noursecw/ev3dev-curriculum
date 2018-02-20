@@ -5,6 +5,7 @@ Author: Tiarnan Rice
 
 import tkinter
 from tkinter import ttk
+from tkinter import messagebox
 
 import random
 
@@ -30,12 +31,14 @@ class UIhandler(object):
 
     def on_distance_recieve(self, distance):
         print("Made it to ", distance, " inches away")
+        messagebox.showinfo(title='Congratulations!', message='You made '
+                                                              'it to %d inches away!' % distance)
 
-    def send_commands(self, mqtt_client):
+    def send_commands(self, event, mqtt_client):
         print("Sending commands")
         mqtt_client.send_message('recieve_commands', [self.commands])
 
-    def run_commands(self, mqtt_client):
+    def run_commands(self, event, mqtt_client):
         print("Running commands")
         mqtt_client.send_message('run_commands', [])
 
@@ -58,11 +61,17 @@ def main():
 
     newcommands = ttk.Button(main_frame, padding=4, text='New commands')
     newcommands.bind("<Button-1>", lambda event: handler.new_commands(event))
-    newcommands.grid(sticky='W')
+    newcommands.grid(sticky='W', pady=10)
 
     sendcommands = ttk.Button(main_frame, padding=4, text='Send commands')
-    sendcommands.bind("<Button-1>", lambda event: handler.send_commands(event))
-    sendcommands.grid(sticky='W')
+    sendcommands.bind("<Button-1>", lambda event: handler.send_commands(
+        event, mqtt_client))
+    sendcommands.grid(row=4, sticky='W', pady=10)
+
+    runcommands = ttk.Button(main_frame, padding=4, text='Run')
+    runcommands.bind("<Button-1>",
+                     lambda event: handler.run_commands(event, mqtt_client))
+    runcommands.grid(row=5, sticky='W', pady=10)
 
     root.mainloop()
 
