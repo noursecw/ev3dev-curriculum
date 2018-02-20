@@ -321,7 +321,7 @@ class Snatch3r(object):
             elif action[0] == 8:  # drive_forward handles all drive actions by alteration of the speed signs.
                 # print("replay drive")
                 running_time = mem[k + 1][1] - action[1]  # time until next action
-                print(action[1], mem[k + 1][1], running_time, action[2], action[3])
+                # print(action[1], mem[k + 1][1], running_time, action[2], action[3])
                 self.drive_timed(action[2], action[3], running_time)
             elif action[0] == 11:
                 self.stop_amnesia()
