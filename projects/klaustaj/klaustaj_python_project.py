@@ -38,13 +38,13 @@ def main():
     goto_and_retrieve_button['command'] = lambda: goto(mqtt_client,
                                                        my_delegate, waypoint,
                                                        start,
-                                                       speed_entry.get(),
+                                                       speed_entry,
                                                        retrieve=True)
 
     goto_button = ttk.Button(frame, text="Go To")
     goto_button.grid(row=2, column=4)
     goto_button['command'] = lambda: goto(mqtt_client, my_delegate, waypoint,
-                                          start, speed_entry.get())
+                                          start, speed_entry)
 
     speed_label = ttk.Label(frame, text='Speed:')
     speed_label.grid(row=2, column=1)
@@ -57,7 +57,7 @@ def main():
     return_to_base_button.grid(row=2, column=5)
     return_to_base_button['command'] = lambda: goto(mqtt_client, my_delegate,
                                                     start, waypoint,
-                                                    speed_entry.get())
+                                                    speed_entry)
 
     width = 400
     height = 500
@@ -122,7 +122,7 @@ class Robot(object):
         self.cl.y = self.cl.y + delta_y
 
 
-def goto(mqtt_client, my_delegate, wp, start, speed, retrieve=False):
+def goto(mqtt_client, my_delegate, wp, start, speed_entry, retrieve=False):
     """
     Recieves a waypoint and speed. Robot then attempts to travel to waypoint in
     a straight line, but swerves to avoid obstacles when they are detected with
@@ -142,18 +142,18 @@ def goto(mqtt_client, my_delegate, wp, start, speed, retrieve=False):
     avoid_dist = 20
 
     while True:
-        turn_degrees(mqtt_client, v_robot.angle_to_wp() - v_robot.angle)
+        turn_degrees(mqtt_client, v_robot.angle_to_wp() - v_robot.angle,
+                     speed_entry)
         v_robot.angle = v_robot.angle_to_wp()
 
-        while (abs(my_delegate.pixy_x - 160) > threshold) & (
-                    my_delegate.ir_dist > avoid_dist):
-            drive_forward(mqtt_client, speed)
+        while (my_delegate.ir_dist > avoid_dist):
+            drive_forward(mqtt_client, speed_entry)
 
             delta_t = 0.1
             time.sleep(delta_t)
 
             cl = v_robot.cl.clone  # for v_robot graphic
-            v_robot.update_cl(speed, delta_t)
+            v_robot.update_cl(speed_entry, delta_t)
 
             line = rg.Line(cl, v_robot.cl)  # for v_robot graphic
             line.attach_to(window)  # for v_robot graphic
@@ -163,14 +163,14 @@ def goto(mqtt_client, my_delegate, wp, start, speed, retrieve=False):
                 print("Waypoint Reached")
                 return
 
-        if abs(my_delegate.pixy_x - 160) < threshold:
-            if my_delegate.pixy_x <= 160:
-                avoid(mqtt_client, my_delegate, v_robot, speed, 1,
-                      threshold, window)
-
-            if my_delegate.pixy_x > 160:
-                avoid(mqtt_client, my_delegate, v_robot, speed, -1,
-                      threshold, window)
+        # if abs(my_delegate.pixy_x - 160) < threshold:
+        #     if my_delegate.pixy_x <= 160:
+        #         avoid(mqtt_client, my_delegate, v_robot, speed, 1,
+        #               threshold, window)
+        #
+        #     if my_delegate.pixy_x > 160:
+        #         avoid(mqtt_client, my_delegate, v_robot, speed, -1,
+        #               threshold, window)
 
         if v_robot.distance_to_wp() < target_threshold:
             print("Waypoint Reached")
@@ -204,12 +204,13 @@ def avoid(mqtt_client, my_delegate, v_robot, speed, angle_increment,
                 break
 
 
-def turn_degrees(mqtt_client, angle, speed):
-    mqtt_client.send_message("turn_degrees", [angle, speed])
+def turn_degrees(mqtt_client, angle, speed_entry):
+    print('turn_degrees')
+    mqtt_client.send_message("turn_degrees", [angle, int(speed_entry.get())])
 
 
-def drive_forward(mqtt_client, speed):
-    mqtt_client.send_message("drive_forward", [speed])
+def drive_forward(mqtt_client, speed_entry):
+    mqtt_client.send_message("drive_forward", [int(speed_entry.get())])
 
 
 main()
