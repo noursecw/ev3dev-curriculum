@@ -1,3 +1,10 @@
+"""
+This project is an autonomous retrieval/waypoint robot. A waypont is input
+to the GUI and, when the 'Go To' button is pressed, the robot wil travel to
+that point, steering to avoid obstacles in its path.
+"""
+
+
 import tkinter
 from tkinter import ttk
 import mqtt_remote_method_calls as com
@@ -15,6 +22,9 @@ class MyDelegate(object):
 
 
 def main():
+    """
+    Tkinter code for the robot GUI.
+    """
     my_delegate = MyDelegate()
     mqtt_client = com.MqttClient(my_delegate)
     mqtt_client.connect_to_ev3()
@@ -145,6 +155,18 @@ def goto(mqtt_client, my_delegate, wp, start, speed):
 
 
 def avoid(mqtt_client, my_delegate, v_robot, speed, threshold):
+    """
+    This is called when the robot detects an object in the way. It steeres
+    until it doesnt see it, then it steers a little further, drives forward,
+    and exits the function.
+    
+    :param mqtt_client:
+    :param my_delegate:
+    :param v_robot:
+    :param speed:
+    :param threshold:
+    :return:
+    """
     while my_delegate.ir_dist < threshold:
         turn_degrees(mqtt_client, 10, speed)
         v_robot.angle = v_robot.angle + 10
