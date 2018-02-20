@@ -24,7 +24,7 @@ class Snatch3r(object):
     # (and delete these comments)
     def __init__(self):
         self.left_motor = ev3.LargeMotor(ev3.OUTPUT_B)
-        self.right_motor = ev3.LargeMotor(ev3.OUTPUT_C)
+        self.right_motor = ev3.LargeMotor(ev3.OUTPUT_D)
         self.arm_motor = ev3.MediumMotor(ev3.OUTPUT_A)
         self.touch_sensor = ev3.TouchSensor(ev3.INPUT_1)
         self.running = False
