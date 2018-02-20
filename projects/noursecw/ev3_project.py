@@ -1,14 +1,10 @@
 """Accepts human input via MQTT or IR remote for drive and arm functions. When complete, the beacon button on the IR
-    remote will repeat the human input autonomously. If an obstacle presents itself, the robot will avoid it and resume
-    its original path. As the robot operates, it wil, play tones based on values of the color sensor."""
+    remote will repeat the human input autonomously. As the robot operates, it will play tones based on values of the
+    color sensor."""
 
 import robot_controller_noursecw as robo
 import ev3dev.ev3 as ev3
 import mqtt_remote_method_calls as com
-
-
-# import math
-
 
 
 def main():
