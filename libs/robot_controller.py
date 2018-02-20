@@ -24,14 +24,13 @@ class Snatch3r(object):
     # (and delete these comments)
     def __init__(self):
         self.left_motor = ev3.LargeMotor(ev3.OUTPUT_B)
-        self.right_motor = ev3.LargeMotor(ev3.OUTPUT_D)
+        self.right_motor = ev3.LargeMotor(ev3.OUTPUT_C)
         self.arm_motor = ev3.MediumMotor(ev3.OUTPUT_A)
         self.touch_sensor = ev3.TouchSensor(ev3.INPUT_1)
         self.running = False
         self.color_sensor = ev3.ColorSensor()
         self.ir_sensor = ev3.InfraredSensor()
         self.pixy = ev3.Sensor(driver_name="pixy-lego")
-
 
         assert self.pixy
         assert self.ir_sensor
@@ -77,7 +76,7 @@ class Snatch3r(object):
         d = 4.7
         turn_sp = d * degrees_to_turn
 
-        self.left_motor.run_to_rel_pos(position_sp=turn_sp,
+        self.left_motor.run_to_rel_pos(position_sp=-turn_sp,
                                        speed_sp=left_sp,
                                        stop_action=ev3.Motor.STOP_ACTION_BRAKE)
 
@@ -87,7 +86,7 @@ class Snatch3r(object):
 
         self.right_motor.wait_while(ev3.Motor.STATE_RUNNING)
         self.left_motor.wait_while(ev3.Motor.STATE_RUNNING)
-        ev3.Sound.beep().wait()
+        # ev3.Sound.beep().wait()
 
     def arm_calibration(self):
         """
