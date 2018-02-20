@@ -29,17 +29,8 @@ def main():
     waypoint = Point(0, 0)
 
     root = tkinter.Tk()
-    root.title('Autonomous Retrieval Robot Command Window')
     frame = ttk.Frame(root, padding=10)
     frame.grid()
-
-    goto_and_retrieve_button = ttk.Button(frame, text="Go To and Retrieve")
-    goto_and_retrieve_button.grid(row=2, column=3)
-    goto_and_retrieve_button['command'] = lambda: goto(mqtt_client,
-                                                       my_delegate, waypoint,
-                                                       start,
-                                                       speed_entry,
-                                                       retrieve=True)
 
     goto_button = ttk.Button(frame, text="Go To")
     goto_button.grid(row=2, column=4)
@@ -53,7 +44,7 @@ def main():
     speed_entry.insert(0, "500")
     speed_entry.grid(row=2, column=2)
 
-    return_to_base_button = ttk.Button(frame, text="Return to Base")
+    return_to_base_button = ttk.Button(frame, text="Return to Start")
     return_to_base_button.grid(row=2, column=5)
     return_to_base_button['command'] = lambda: goto(mqtt_client, my_delegate,
                                                     start, waypoint,
@@ -62,7 +53,7 @@ def main():
     width = 400
     height = 500
     waypoint_canvas = tkinter.Canvas(frame, width=width, height=height)
-    waypoint_canvas.config(background='DarkOrange3')
+    waypoint_canvas.config(background='gray')
     waypoint_canvas.grid(columnspan=5, row=3, column=1)
     waypoint_canvas.bind("<Button-1>", lambda event: handle_mouse_click(
         event, waypoint))
@@ -122,7 +113,7 @@ class Robot(object):
         self.cl.y = self.cl.y + delta_y
 
 
-def goto(mqtt_client, my_delegate, wp, start, speed_entry, retrieve=False):
+def goto(mqtt_client, my_delegate, wp, start, speed_entry):
     """
     Recieves a waypoint and speed. Robot then attempts to travel to waypoint in
     a straight line, but swerves to avoid obstacles when they are detected with
@@ -146,7 +137,8 @@ def goto(mqtt_client, my_delegate, wp, start, speed_entry, retrieve=False):
                      speed_entry)
         v_robot.angle = v_robot.angle_to_wp()
 
-        while (my_delegate.ir_dist > avoid_dist):
+        while (abs(my_delegate.pixy_x - 160) < threshold) & (
+                    my_delegate.ir_dist > avoid_dist):
             drive_forward(mqtt_client, speed_entry)
 
             delta_t = 0.1
