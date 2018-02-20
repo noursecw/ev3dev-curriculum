@@ -252,6 +252,15 @@ class Snatch3r(object):
             time.sleep(0.01)
         self.stop_amnesia()
 
+    def stop_timed(self, stop_time):
+        """stops for the specified amount of time; used in playback. Does not record action to memory."""
+        ti = time.time()
+        while (stop_time - (time.time() - ti)) > 0:  # (while elapsed time is less than the running time)
+            # print("driving")
+            self.stop_amnesia()
+            time.sleep(0.01)
+
+
     def seek_beacon(self):
         """
             Uses the IR Sensor in BeaconSeeker mode to find the beacon.  If the beacon is found this return True.
@@ -324,7 +333,12 @@ class Snatch3r(object):
                 # print(action[1], mem[k + 1][1], running_time, action[2], action[3])
                 self.drive_timed(action[2], action[3], running_time)
             elif action[0] == 11:
-                self.stop_amnesia()
+                if action.index != len(mem) - 1:  # (if the stop action is not the final action)
+                    stop_time = mem[k + 1][1] - action[1]  # time until next action
+                    self.stop_timed(stop_time)
+                else:
+                    self.stop_amnesia()
+
 
         ev3.Sound.beep()
         self.stop_amnesia()

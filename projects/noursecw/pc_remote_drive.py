@@ -9,15 +9,13 @@ from tkinter import ttk
 
 import mqtt_remote_method_calls as com
 
-global right_speed_entry
-global left_speed_entry
-
 
 class DataContainer:
+    """allows access to variables in main() without resorting to global declarations."""
     def __init__(self):
-        self.right_speed_entry = 0
-        self.left_speed_entry = 0
-        self.mqtt_client = ''
+        self.right_speed_entry = None
+        self.left_speed_entry = None
+        self.mqtt_client = None
 
 
 def main():
@@ -55,7 +53,6 @@ def main():
 
     stop_button = ttk.Button(main_frame, text="Stop")
     stop_button.grid(row=3, column=1)
-    # stop_button and '<space>' key (note, does not need left_speed_entry, right_speed_entry)
     stop_button['command'] = lambda: stop(dc.mqtt_client)
     root.bind('<space>', lambda event: stop(dc.mqtt_client))
 
@@ -96,31 +93,31 @@ def main():
 
 def drive_forward_event(event):
     dc = DataContainer
-    print("drive forward")
+    # print("drive forward")
     drive_forward(dc.mqtt_client, dc.left_speed_entry, dc.right_speed_entry)
 
 
 def drive_back_event(event):
     dc = DataContainer
-    print("drive backward")
+    # print("drive backward")
     drive_backwards(dc.mqtt_client, dc.left_speed_entry, dc.right_speed_entry)
 
 
 def drive_right_event(event):
     dc = DataContainer
-    print("turn right")
+    # print("turn right")
     turn_right(dc.mqtt_client, dc.left_speed_entry, dc.right_speed_entry)
 
 
 def drive_left_event(event):
     dc = DataContainer
-    print("turn left")
+    # print("turn left")
     turn_left(dc.mqtt_client, dc.left_speed_entry, dc.right_speed_entry)
 
 
 def stop_event(event):
     dc = DataContainer
-    print("stop")
+    # print("stop")
     stop(dc.mqtt_client)
 
 # ----------------------------------------------------------------------
