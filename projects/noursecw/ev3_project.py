@@ -1,6 +1,6 @@
 """Accepts human input via MQTT or IR remote for drive and arm functions. When complete, the beacon button on the IR
-    remote will repeat the human input autonomously. As the robot operates, it will play tones based on values of the
-    color sensor."""
+    remote will repeat the human input autonomously. If an object presents itself that was not in the original path the
+    robot will move it out of the way and resume driving."""
 
 import robot_controller_noursecw as robo
 import ev3dev.ev3 as ev3
