@@ -1,10 +1,3 @@
-"""
-This project is an autonomous retrieval/waypoint robot. A waypont is input
-to the GUI and, when the 'Go To' button is pressed, the robot wil travel to
-that point, steering to avoid obstacles in its path.
-"""
-
-
 import tkinter
 from tkinter import ttk
 import mqtt_remote_method_calls as com
@@ -14,20 +7,25 @@ import time
 
 class MyDelegate(object):
     def __init__(self):
+        self.pixy_x = 0
+        self.pixy_y = 0
         self.ir_dist = 0
 
-    def get_ir_dist(self, dist):
+    def pixy_coords(self, x, y):
+        self.pixy_x = x
+        self.pixy_y = y
+        print(x, y)
+
+    def ir_dist(self, dist):
         self.ir_dist = dist
-        print(self.ir_dist)
 
 
 def main():
-    """
-    Tkinter code for the robot GUI.
-    """
     my_delegate = MyDelegate()
     mqtt_client = com.MqttClient(my_delegate)
     mqtt_client.connect_to_ev3()
+
+    print(my_delegate.ir_dist)
 
     start = Point(200, 450)
     waypoint = Point(0, 0)
@@ -39,7 +37,7 @@ def main():
     goto_button = ttk.Button(frame, text="Go To")
     goto_button.grid(row=2, column=4)
     goto_button['command'] = lambda: goto(mqtt_client, my_delegate, waypoint,
-                                          start, int(speed_entry.get()))
+                                          start, speed_entry)
 
     speed_label = ttk.Label(frame, text='Speed:')
     speed_label.grid(row=2, column=1)
@@ -51,7 +49,7 @@ def main():
     width = 400
     height = 500
     waypoint_canvas = tkinter.Canvas(frame, width=width, height=height)
-    waypoint_canvas.config(background='DarkOrange3')
+    waypoint_canvas.config(background='gray')
     waypoint_canvas.grid(columnspan=5, row=3, column=1)
     waypoint_canvas.bind("<Button-1>", lambda event: handle_mouse_click(
         event, waypoint))
@@ -96,7 +94,6 @@ class Robot(object):
     def angle_to_wp(self):
         delta_x = self.wp.x - self.cl.x
         delta_y = self.wp.y - self.cl.y
-        print(math.tan(delta_x / delta_y))
         return math.tan(delta_x / delta_y)
 
     def distance_to_wp(self):
@@ -112,7 +109,7 @@ class Robot(object):
         self.cl.y = self.cl.y + delta_y
 
 
-def goto(mqtt_client, my_delegate, wp, start, speed):
+def goto(mqtt_client, my_delegate, wp, start, speed_entry):
     """
     Recieves a waypoint and speed. Robot then attempts to travel to waypoint in
     a straight line, but swerves to avoid obstacles when they are detected with
@@ -124,70 +121,71 @@ def goto(mqtt_client, my_delegate, wp, start, speed):
 
     v_robot = Robot(wp, start)
 
-    threshold = 40
-    target_dist = 10
+    threshold = 50
+    target_dist = 5
 
     while True:
         turn_degrees(mqtt_client, v_robot.angle_to_wp() - v_robot.angle,
-                     speed)
-
-        time.sleep(3)
-
+                     speed_entry)
         v_robot.angle = v_robot.angle_to_wp()
 
-        drive_forward(mqtt_client, speed)
+        while abs(my_delegate.pixy_x - 160) < threshold:
 
-        while True:
-            print('looking for object')
-
-            if my_delegate.ir_dist < threshold:
-                avoid(mqtt_client, my_delegate, v_robot, speed,
-                      threshold)
-                break
+            drive_forward(mqtt_client, speed_entry)
 
             delta_t = 0.1
             time.sleep(delta_t)
-            v_robot.update_cl(speed, delta_t)
+
+            v_robot.update_cl(speed_entry, delta_t)
 
             if v_robot.distance_to_wp() < target_dist:
                 print("Waypoint Reached")
                 return
 
+        if abs(my_delegate.pixy_x - 160) < threshold:
+            if my_delegate.pixy_x <= 160:
+                avoid(mqtt_client, my_delegate, v_robot, speed_entry, 1,
+                      threshold)
 
-def avoid(mqtt_client, my_delegate, v_robot, speed, threshold):
-    """
-    This is called when the robot detects an object in the way. It steeres
-    until it doesnt see it, then it steers a little further, drives forward,
-    and exits the function.
-    
-    :param mqtt_client:
-    :param my_delegate:
-    :param v_robot:
-    :param speed:
-    :param threshold:
-    :return:
-    """
-    while my_delegate.ir_dist < threshold:
-        turn_degrees(mqtt_client, 10, speed)
-        v_robot.angle = v_robot.angle + 10
+            if my_delegate.pixy_x > 160:
+                avoid(mqtt_client, my_delegate, v_robot, speed_entry, -1,
+                      threshold)
 
-    turn_degrees(mqtt_client, 10, speed)
-    v_robot.angle = v_robot.angle + 10
-
-    drive_forward(mqtt_client, speed)
-    time.sleep(3)
-    v_robot.update_cl(speed, 3)
+        if v_robot.distance_to_wp() < target_dist:
+            print("Waypoint Reached")
+            return
 
 
-def turn_degrees(mqtt_client, angle, speed):
+def avoid(mqtt_client, my_delegate, v_robot, speed, angle_increment,
+          threshold):
+    while abs(my_delegate.pixy_x - 160) < threshold:
+        turn_degrees(mqtt_client, angle_increment, speed)
+        v_robot.angle = v_robot.angle + angle_increment
+
+    while abs(v_robot.angle - v_robot.angle_to_wp) > 3:
+        drive_forward(mqtt_client, speed)
+
+        delta_t = 1
+        time.sleep(delta_t)
+
+        v_robot.update_cl(speed, delta_t)
+
+        while abs(my_delegate.pixy_x - 160) > threshold:
+            turn_degrees(mqtt_client, -angle_increment, speed)
+            v_robot.angle = v_robot.angle - angle_increment
+
+            if abs(v_robot.angle - v_robot.angle_to_wp) > 3:
+                break
+
+
+def turn_degrees(mqtt_client, angle, speed_entry):
     print('turn_degrees')
-    mqtt_client.send_message("turn_degrees", [angle, int(speed)])
+    mqtt_client.send_message("turn_degrees", [angle, int(speed_entry.get())])
 
 
-def drive_forward(mqtt_client, speed):
+def drive_forward(mqtt_client, speed_entry):
     print('drive_forward')
-    mqtt_client.send_message("drive_forward",
-                             [int(speed), int(speed)])
+    mqtt_client.send_message("drive_forward", [int(speed_entry.get())])
 
 
 main()
