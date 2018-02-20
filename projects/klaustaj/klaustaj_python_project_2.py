@@ -1,4 +1,6 @@
 """
+Aaron Klaustermeier Final Project PC Code
+
 This project is an autonomous retrieval/waypoint robot. A waypont is input
 to the GUI and, when the 'Go To' button is pressed, the robot wil travel to
 that point, steering to avoid obstacles in its path.
@@ -65,17 +67,41 @@ def main():
 
 class Point(object):
     def __init__(self, x, y):
+        """
+        This class stores x and y coordinates for waypoints as well as the
+        points used by the pc to track the robot's current position.
+
+        :param x:
+        :param y:
+        """
         self.x = x
         self.y = y
 
     def __repr__(self):
+        """
+        Used for debugging code
+        :return:
+        """
         return 'Waypoint({: .1f}, {: .1f})'.format(self.x, self.y)
 
     def clone(self):
+        """
+        Clones the point and returns the clone.
+
+        :return:
+        """
         return Point(self.x, self.y)
 
 
 def handle_mouse_click(click_event, waypoint):
+    """
+    This function is the callback for a mouse click which occus on the
+    waypoint canvas.
+
+    :param click_event:
+    :param waypoint:
+    :return:
+    """
     x = click_event.x
     y = click_event.y
     r = 3
@@ -88,23 +114,52 @@ def handle_mouse_click(click_event, waypoint):
 
 class Robot(object):
     def __init__(self, start, wp):
+        """
+        This class creates a virtual robot which the pc uses to track the
+        robot's movements through 2D space. This is used mainly to tell the
+        robot which way to turn to continue moving toward the waypoint after it
+         steers around an object.
+
+        :param start:
+        :param wp:
+        """
         self.angle = 0
         self.cl = start.clone()
         self.start = start.clone()
         self.wp = wp.clone()
 
     def angle_to_wp(self):
+        """
+        Returns the angle between the vertical and the line passing
+        through the robot's current location and the waypoint.
+
+        :return:
+        """
         delta_x = self.wp.x - self.cl.x
         delta_y = self.wp.y - self.cl.y
         print(math.tan(delta_x / delta_y))
         return math.tan(delta_x / delta_y)
 
     def distance_to_wp(self):
+        """
+        Returns the distance between the robot's current location and the
+        waypoint.
+
+        :return:
+        """
         delta_x = self.wp.x - self.cl.x
         delta_y = self.wp.y - self.cl.y
         return math.sqrt(delta_x ** 2 + delta_y ** 2)
 
     def update_cl(self, speed, delta_t):
+        """
+        Mutates the coordinate values of the robot's current location after
+        moving in a straight line forward.
+
+        :param speed:
+        :param delta_t:
+        :return:
+        """
         speed_inps = 0.0103 * speed + 0.3152
         delta_x = speed_inps * delta_t * math.sin(self.angle)
         delta_y = speed_inps * delta_t * math.cos(self.angle)
@@ -114,9 +169,10 @@ class Robot(object):
 
 def goto(mqtt_client, my_delegate, wp, start, speed):
     """
-    Recieves a waypoint and speed. Robot then attempts to travel to waypoint in
-    a straight line, but swerves to avoid obstacles when they are detected with
-    the pixy camera.
+    Receives a waypoint, starting point, and speed. Robot then attempts to
+    travel to the waypoint in a straight line, but swerves to avoid
+    obstacles when they are detected with the IR sensor. After swerving to
+    avoid an object, the process repeats, until the waypoint is reached.
     """
     # print('Go To')
     # print('waypoint = ', wp)
@@ -156,10 +212,10 @@ def goto(mqtt_client, my_delegate, wp, start, speed):
 
 def avoid(mqtt_client, my_delegate, v_robot, speed, threshold):
     """
-    This is called when the robot detects an object in the way. It steeres
+    This is called when the robot detects an object in the way. It steers
     until it doesnt see it, then it steers a little further, drives forward,
     and exits the function.
-    
+
     :param mqtt_client:
     :param my_delegate:
     :param v_robot:
@@ -180,14 +236,26 @@ def avoid(mqtt_client, my_delegate, v_robot, speed, threshold):
 
 
 def turn_degrees(mqtt_client, angle, speed):
+    """
+    Calls the turn_degrees function in the robot_controller file.
+    :param mqtt_client:
+    :param angle:
+    :param speed:
+    :return:
+    """
     print('turn_degrees')
     mqtt_client.send_message("turn_degrees", [angle, int(speed)])
 
 
 def drive_forward(mqtt_client, speed):
+    """
+        Calls the drive_forward function in the robot_controller file.
+    :param mqtt_client:
+    :param speed:
+    :return:
+    """
     print('drive_forward')
-    mqtt_client.send_message("drive_forward",
-                             [int(speed), int(speed)])
+    mqtt_client.send_message("drive_forward", [int(speed), int(speed)])
 
 
 main()
