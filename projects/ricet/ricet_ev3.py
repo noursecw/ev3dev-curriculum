@@ -63,8 +63,8 @@ class CommandHandler:
                 print('Not a command')
 
         while not beacon:
-            print('searching')
             x = self.robot.pixy.value(1)
+            print(x)
             if x < 150:
                 self.robot.turn_left(100, 100)
             elif x > 170:
